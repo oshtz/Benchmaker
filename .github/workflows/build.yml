@@ -53,10 +53,10 @@ jobs:
       - name: Create portable exe
         shell: pwsh
         run: |
-          # Install enigmavirtualbox CLI globally
-          npm install -g enigmavirtualbox
+          # Install @insco/enigma-virtualbox CLI globally
+          npm install -g @insco/enigma-virtualbox
           if ($LASTEXITCODE -ne 0) {
-            throw "Failed to install enigmavirtualbox"
+            throw "Failed to install @insco/enigma-virtualbox"
           }
 
           $inputExe = Resolve-Path "src-tauri\target\release\Benchmaker.exe"
@@ -67,20 +67,20 @@ jobs:
           }
           $webviewDllPath = $webviewDll.FullName
 
-          # Use enigmavirtualbox to create the portable exe
-          # It downloads EVB and runs it automatically
+          # Use enigmavirtualbox to generate a compatible EVB project file
+          $evbStaging = Join-Path $PWD "evb-staging"
+          New-Item -ItemType Directory -Force -Path $evbStaging | Out-Null
+          Copy-Item -Path $webviewDllPath -Destination $evbStaging -Force
           $evbProject = Join-Path $PWD "Benchmaker.evb"
-          enigmavirtualbox gen $evbProject $outputExe $inputExe $webviewDllPath
+          enigmavirtualbox generate $evbStaging --input $inputExe --output $outputExe --project-name $evbProject
           if ($LASTEXITCODE -ne 0) {
-            throw "enigmavirtualbox gen failed"
+            throw "enigmavirtualbox generate failed"
           }
-          $evbXml = Get-Content -Raw -Path $evbProject
-          Set-Content -Path $evbProject -Value $evbXml -Encoding Unicode
           $evbConsole = "C:\Program Files (x86)\Enigma Virtual Box\enigmavbconsole.exe"
           if (-not (Test-Path $evbConsole)) {
             throw "enigmavbconsole.exe not found at $evbConsole"
           }
-          & $evbConsole $evbProject -input $inputExe -output $outputExe
+          & $evbConsole $evbProject
           if ($LASTEXITCODE -ne 0) {
             throw "enigmavbconsole failed"
           }
