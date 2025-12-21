@@ -38,10 +38,30 @@ jobs:
         run: |
           # Download EVB installer
           $evbUrl = "https://enigmaprotector.com/assets/files/enigmavb.exe"
-          Invoke-WebRequest -Uri $evbUrl -OutFile enigmavb_setup.exe -UseBasicParsing
+          $evbInstaller = Join-Path $env:RUNNER_TEMP "enigmavb_setup.exe"
+          Remove-Item -Path $evbInstaller -Force -ErrorAction SilentlyContinue
+          $downloaded = $false
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
+              curl.exe -L --retry 3 --retry-delay 2 --retry-all-errors --output $evbInstaller $evbUrl
+            } else {
+              Invoke-WebRequest -Uri $evbUrl -OutFile $evbInstaller -UseBasicParsing
+            }
+            if ((Test-Path $evbInstaller) -and (Get-Item $evbInstaller).Length -gt 1MB) {
+              $downloaded = $true
+              break
+            }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $downloaded) {
+            throw "Failed to download a valid EVB installer"
+          }
 
           # Install silently
-          Start-Process -FilePath .\enigmavb_setup.exe -ArgumentList "/VERYSILENT","/NORESTART" -Wait
+          $process = Start-Process -FilePath $evbInstaller -ArgumentList "/VERYSILENT","/NORESTART" -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "EVB installer failed with exit code $($process.ExitCode)"
+          }
 
           # Verify
           if (Test-Path "C:\Program Files (x86)\Enigma Virtual Box\enigmavbconsole.exe") {
