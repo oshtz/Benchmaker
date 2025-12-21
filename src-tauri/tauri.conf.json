@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "Benchmaker",
-    "version": "1.0.0"
+    "version": "0.0.2"
   },
   "tauri": {
     "allowlist": {
@@ -18,6 +18,27 @@
         "maximize": true,
         "unmaximize": true,
         "startDragging": true
+      },
+      "http": {
+        "all": false,
+        "request": true,
+        "scope": [
+          "https://api.github.com/*",
+          "https://github.com/oshtz/Benchmaker/releases/*",
+          "https://objects.githubusercontent.com/*"
+        ]
+      },
+      "path": {
+        "all": false,
+        "tempDir": true
+      },
+      "fs": {
+        "all": false,
+        "writeFile": true,
+        "createDir": true,
+        "scope": [
+          "$TEMP/**"
+        ]
       }
     },
     "windows": [
