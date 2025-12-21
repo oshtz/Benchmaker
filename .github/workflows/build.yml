@@ -69,9 +69,14 @@ jobs:
 
           # Use enigmavirtualbox to create the portable exe
           # It downloads EVB and runs it automatically
-          enigmavirtualbox pack $inputExe $outputExe $webviewDllPath
+          $evpPath = Join-Path $PWD "src-tauri\target\release\Benchmaker.evp"
+          enigmavirtualbox gen $evpPath $outputExe $inputExe $webviewDllPath
           if ($LASTEXITCODE -ne 0) {
-            throw "enigmavirtualbox pack failed"
+            throw "enigmavirtualbox gen failed"
+          }
+          enigmavirtualbox cli $evpPath
+          if ($LASTEXITCODE -ne 0) {
+            throw "enigmavirtualbox cli failed"
           }
 
           # Verify output
