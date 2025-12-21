@@ -3,7 +3,8 @@
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use tauri::AppHandle;
 
 const CURRENT_SCHEMA_VERSION: i64 = 2;
@@ -1034,6 +1035,48 @@ fn chrono_now() -> i64 {
 }
 
 // ============================================================================
+// Updater
+// ============================================================================
+
+fn escape_powershell_literal(value: &str) -> String {
+    value.replace('\'', "''")
+}
+
+#[tauri::command]
+fn apply_update(app: AppHandle, update_path: String) -> Result<(), String> {
+    if cfg!(debug_assertions) {
+        return Err("Auto-update is disabled in dev builds.".to_string());
+    }
+
+    if !cfg!(target_os = "windows") {
+        return Err("Auto-update is only supported on Windows.".to_string());
+    }
+
+    let update_file = Path::new(&update_path);
+    if !update_file.exists() {
+        return Err("Update file not found.".to_string());
+    }
+
+    let current_exe = std::env::current_exe().map_err(|err| err.to_string())?;
+    let pid = std::process::id();
+
+    let script = format!(
+        "$pid = {pid}; $source = '{source}'; $target = '{target}'; while (Get-Process -Id $pid -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 200 }}; Move-Item -Force $source $target; Start-Process $target",
+        pid = pid,
+        source = escape_powershell_literal(&update_file.to_string_lossy()),
+        target = escape_powershell_literal(&current_exe.to_string_lossy()),
+    );
+
+    Command::new("powershell")
+        .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &script])
+        .spawn()
+        .map_err(|err| err.to_string())?;
+
+    app.exit(0);
+    Ok(())
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 
@@ -1052,6 +1095,7 @@ fn main() {
             delete_run,
             get_app_state,
             save_app_state,
+            apply_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Toaster } from '@/components/ui/toaster'
 import { Tabs } from '@/components/ui/tabs'
 import { TitleBar } from '@/components/layout/TitleBar'
+import { AutoUpdater } from '@/components/layout/AutoUpdater'
 import { Header } from '@/components/layout/Header'
 import { MainTabs } from '@/components/layout/MainTabs'
 import { initLocalDb } from '@/services/localDb'
@@ -23,6 +24,7 @@ function App() {
           </main>
         </Tabs>
       </div>
+      <AutoUpdater />
       <Toaster />
     </div>
   )
