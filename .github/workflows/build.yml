@@ -53,16 +53,26 @@ jobs:
       - name: Create portable exe
         shell: pwsh
         run: |
-          # Install node-enigmavirtualbox globally
-          npm install -g node-enigmavirtualbox
+          # Install enigmavirtualbox CLI globally
+          npm install -g enigmavirtualbox
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to install enigmavirtualbox"
+          }
 
           $inputExe = Resolve-Path "src-tauri\target\release\Benchmaker.exe"
           $outputExe = Join-Path $PWD "src-tauri\target\release\Benchmaker-Portable.exe"
-          $webviewDll = Resolve-Path "src-tauri\target\release\WebView2Loader.dll"
+          $webviewDll = Get-ChildItem -Path "src-tauri\target" -Filter "WebView2Loader.dll" -Recurse | Select-Object -First 1
+          if (-not $webviewDll) {
+            throw "WebView2Loader.dll not found under src-tauri\\target"
+          }
+          $webviewDllPath = $webviewDll.FullName
 
-          # Use node-enigmavirtualbox to create the portable exe
+          # Use enigmavirtualbox to create the portable exe
           # It downloads EVB and runs it automatically
-          enigmavirtualbox pack $inputExe $outputExe $webviewDll
+          enigmavirtualbox pack $inputExe $outputExe $webviewDllPath
+          if ($LASTEXITCODE -ne 0) {
+            throw "enigmavirtualbox pack failed"
+          }
 
           # Verify output
           if (Test-Path $outputExe) {
