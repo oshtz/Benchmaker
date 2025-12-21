@@ -1,0 +1,79 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Tauri app
+        run: npm run tauri:build -- --bundles none
+
+      - name: Install Enigma Virtual Box
+        shell: pwsh
+        run: |
+          # Download EVB installer
+          $evbUrl = "https://enigmaprotector.com/assets/files/enigmavb.exe"
+          Invoke-WebRequest -Uri $evbUrl -OutFile enigmavb_setup.exe -UseBasicParsing
+
+          # Install silently
+          Start-Process -FilePath .\enigmavb_setup.exe -ArgumentList "/VERYSILENT","/NORESTART" -Wait
+
+          # Verify
+          if (Test-Path "C:\Program Files (x86)\Enigma Virtual Box\enigmavbconsole.exe") {
+            Write-Host "EVB installed successfully"
+          } else {
+            throw "EVB installation failed"
+          }
+
+      - name: Create portable exe
+        shell: pwsh
+        run: |
+          # Install node-enigmavirtualbox globally
+          npm install -g node-enigmavirtualbox
+
+          $inputExe = Resolve-Path "src-tauri\target\release\Benchmaker.exe"
+          $outputExe = Join-Path $PWD "src-tauri\target\release\Benchmaker-Portable.exe"
+          $webviewDll = Resolve-Path "src-tauri\target\release\WebView2Loader.dll"
+
+          # Use node-enigmavirtualbox to create the portable exe
+          # It downloads EVB and runs it automatically
+          enigmavirtualbox pack $inputExe $outputExe $webviewDll
+
+          # Verify output
+          if (Test-Path $outputExe) {
+            $size = [math]::Round((Get-Item $outputExe).Length / 1MB, 2)
+            Write-Host "Portable exe created: $size MB"
+          } else {
+            throw "Failed to create portable exe"
+          }
+
+      - name: Upload portable exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: Benchmaker-Portable
+          path: src-tauri/target/release/Benchmaker-Portable.exe

@@ -93,3 +93,7 @@ debug/
 # Misc
 .eslintcache
 .stylelintcache
+PRD.md
+
+# AI
+.claude/
