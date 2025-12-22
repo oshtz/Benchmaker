@@ -1,32 +1,33 @@
 import { useEffect, useState } from 'react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { toast } from '@/components/ui/use-toast'
-import { checkForUpdate, downloadUpdate, installUpdate, type UpdateInfo } from '@/services/updater'
+import { useUpdateStore } from '@/stores/updateStore'
 
 export function AutoUpdater() {
-  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
-  const [updatePath, setUpdatePath] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [prompted, setPrompted] = useState(false)
+  const { status, updateInfo, updatePath, checkNow, downloadNow, installNow } = useUpdateStore()
 
   useEffect(() => {
     let active = true
 
     const runUpdateCheck = async () => {
       try {
-        const info = await checkForUpdate()
+        const info = await checkNow()
         if (!active || !info) return
 
-        setUpdateInfo(info)
         toast({
           title: 'Update available',
           description: `Version ${info.version} is available. Downloading now...`,
         })
 
-        const path = await downloadUpdate(info)
+        const path = await downloadNow(info)
         if (!active) return
 
-        setUpdatePath(path)
-        setDialogOpen(true)
+        if (path) {
+          setDialogOpen(true)
+          setPrompted(true)
+        }
       } catch (error) {
         if (active) {
           console.warn('Auto-update check failed:', error)
@@ -41,6 +42,13 @@ export function AutoUpdater() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!prompted && status === 'ready' && updateInfo && updatePath) {
+      setDialogOpen(true)
+      setPrompted(true)
+    }
+  }, [prompted, status, updateInfo, updatePath])
+
   const handleInstall = async () => {
     if (!updatePath) return
 
@@ -50,7 +58,7 @@ export function AutoUpdater() {
     })
 
     try {
-      await installUpdate(updatePath)
+      await installNow()
     } catch (error) {
       console.error('Update install failed:', error)
       toast({

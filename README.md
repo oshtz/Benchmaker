@@ -20,6 +20,7 @@ Benchmaker enables AI researchers, prompt engineers, and technical teams to:
 - **SQLite persistence** - Local database for test suites and run history
 - **Monaco editor integration** - Rich code editor for prompt authoring
 - **Custom Tauri window** - Native desktop experience with custom title bar
+- **Auto-updates** - Checks GitHub releases on startup and installs new versions
 - **AI-assisted tooling** - Test case generation and prompt enhancement helpers
 - **Dark/Light mode** - Theme support for comfortable usage
 
@@ -126,6 +127,11 @@ Enter your OpenRouter API key in the Settings tab.
 - Review aggregate scores and per-test breakdowns
 - Results are automatically saved for future reference
 
+### Updates
+- The app checks for updates on startup.
+- Click the version button in the header (e.g. `v0.0.2`) to view update status, release notes, or manually re-check.
+- Updates are pulled from GitHub Releases and expect a `Benchmaker-Portable.exe` asset on the latest tag.
+
 ## Development
 
 ### Scripts
@@ -136,6 +142,10 @@ Enter your OpenRouter API key in the Settings tab.
 | `npm run build` | Build frontend for production |
 | `npm run tauri dev` | Run full Tauri development build |
 | `npm run tauri build` | Build production desktop app |
+
+### Release Notes
+- Version is sourced from `package.json` and `src-tauri/tauri.conf.json`.
+- GitHub releases should be tagged as `vX.Y.Z` and include `Benchmaker-Portable.exe`.
 
 ### Architecture Notes
 
