@@ -118,10 +118,11 @@ export async function downloadUpdate(update: UpdateInfo): Promise<string> {
   }
 
   const binary = await downloadBinary(update.downloadUrl)
-  const { tempDir, join } = await import('@tauri-apps/api/path')
+  const { tempdir } = await import('@tauri-apps/api/os')
+  const { join } = await import('@tauri-apps/api/path')
   const { createDir, writeBinaryFile } = await import('@tauri-apps/api/fs')
 
-  const baseDir = await tempDir()
+  const baseDir = await tempdir()
   const updateDir = await join(baseDir, UPDATE_DIR_NAME)
   await createDir(updateDir, { recursive: true })
 
