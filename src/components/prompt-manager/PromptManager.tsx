@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, FolderOpen } from 'lucide-react'
+import { Plus, FolderOpen, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,14 +14,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { useTestSuiteStore } from '@/stores/testSuiteStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 import { JudgePromptEditor } from './JudgePromptEditor'
 import { SystemPromptEditor } from './SystemPromptEditor'
 import { TestCaseList } from './TestCaseList'
 import { TestSuiteSelector } from './TestSuiteSelector'
 import { TestCaseGeneratorDialog } from './TestCaseGeneratorDialog'
+import { BenchmarkGeneratorDialog } from './BenchmarkGeneratorDialog'
 
 export function PromptManager() {
   const { testSuites, activeTestSuiteId, createTestSuite } = useTestSuiteStore()
+  const { apiKey } = useSettingsStore()
   const activeTestSuite = testSuites.find((s) => s.id === activeTestSuiteId)
 
   const [newSuiteName, setNewSuiteName] = useState('')
@@ -61,50 +64,61 @@ export function PromptManager() {
             },
           ]}
           action={
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="lg">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create your first suite
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create Test Suite</DialogTitle>
-                  <DialogDescription>
-                    A test suite contains a system prompt and multiple test cases
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="suite-name">Name</Label>
-                    <Input
-                      id="suite-name"
-                      placeholder="e.g., Logic Puzzles Benchmark"
-                      value={newSuiteName}
-                      onChange={(e) => setNewSuiteName(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="suite-description">Description (optional)</Label>
-                    <Input
-                      id="suite-description"
-                      placeholder="e.g., Tests reasoning and logic capabilities"
-                      value={newSuiteDescription}
-                      onChange={(e) => setNewSuiteDescription(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                    Cancel
+            <div className="flex flex-col sm:flex-row gap-3 items-center">
+              <BenchmarkGeneratorDialog
+                trigger={
+                  <Button size="lg" disabled={!apiKey}>
+                    <Wand2 className="h-4 w-4 mr-2" />
+                    Generate with AI
                   </Button>
-                  <Button onClick={handleCreateSuite} disabled={!newSuiteName.trim()}>
-                    Create
+                }
+              />
+              <span className="text-muted-foreground text-sm">or</span>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="lg" variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create manually
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create Test Suite</DialogTitle>
+                    <DialogDescription>
+                      A test suite contains a system prompt and multiple test cases
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="suite-name">Name</Label>
+                      <Input
+                        id="suite-name"
+                        placeholder="e.g., Logic Puzzles Benchmark"
+                        value={newSuiteName}
+                        onChange={(e) => setNewSuiteName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="suite-description">Description (optional)</Label>
+                      <Input
+                        id="suite-description"
+                        placeholder="e.g., Tests reasoning and logic capabilities"
+                        value={newSuiteDescription}
+                        onChange={(e) => setNewSuiteDescription(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateSuite} disabled={!newSuiteName.trim()}>
+                      Create
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           }
         />
       </>
@@ -119,6 +133,7 @@ export function PromptManager() {
         </div>
         <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center shrink-0">
           {activeTestSuite && <TestCaseGeneratorDialog testSuite={activeTestSuite} />}
+          <BenchmarkGeneratorDialog />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
