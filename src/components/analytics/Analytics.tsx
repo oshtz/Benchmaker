@@ -230,7 +230,7 @@ function Leaderboard({ analytics }: { analytics: AnalyticsData }) {
           </div>
           {categories.length > 1 && (
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-45">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -465,7 +465,7 @@ function TimelineChart({ analytics }: { analytics: AnalyticsData }) {
             return (
               <div
                 key={index}
-                className="flex-1 min-w-[8px] max-w-[40px] group relative"
+                className="flex-1 min-w-2 max-w-10 group relative"
               >
                 <div
                   className="bg-primary/60 hover:bg-primary rounded-t transition-colors"
