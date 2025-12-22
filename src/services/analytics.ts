@@ -1,4 +1,4 @@
-import type { RunResult, TestCaseResult, TestSuite, TestCase } from '@/types'
+import type { RunResult, TestSuite } from '@/types'
 
 // Types for analytics data
 export interface ModelStats {
