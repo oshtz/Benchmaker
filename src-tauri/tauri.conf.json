@@ -29,8 +29,7 @@
         ]
       },
       "path": {
-        "all": false,
-        "tempDir": true
+        "all": true
       },
       "fs": {
         "all": false,
