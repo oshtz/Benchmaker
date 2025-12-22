@@ -5,6 +5,7 @@ import { MainTabsList } from '@/components/layout/MainTabs'
 import { Badge } from '@/components/ui/badge'
 import { useTestSuiteStore } from '@/stores/testSuiteStore'
 import logoBlack from '/logo-black.png'
+import { UpdateStatus } from '@/components/layout/UpdateStatus'
 
 export function Header() {
   const { testSuites, activeTestSuiteId } = useTestSuiteStore()
@@ -33,6 +34,7 @@ export function Header() {
 
         <div className="flex items-center gap-2 sm:gap-4">
           <BenchmarkProgress />
+          <UpdateStatus />
           <ThemeToggle />
           <ApiKeyManager />
         </div>
