@@ -46,16 +46,26 @@ function compareVersions(left: string, right: string): number {
 
 async function fetchJson<T>(url: string): Promise<T> {
   const { fetch, ResponseType } = await import('@tauri-apps/api/http')
-  const response = await fetch<T>(url, {
-    method: 'GET',
-    responseType: ResponseType.JSON,
-    headers: {
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'Benchmaker',
-    },
-  })
+
+  let response
+  try {
+    response = await fetch<T>(url, {
+      method: 'GET',
+      responseType: ResponseType.JSON,
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'Benchmaker',
+      },
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    throw new Error(`Network request failed: ${message}`)
+  }
 
   if (!response.ok) {
+    if (response.status === 403) {
+      throw new Error('GitHub API rate limit exceeded. Try again later.')
+    }
     throw new Error(`GitHub API request failed (${response.status})`)
   }
 
@@ -64,13 +74,20 @@ async function fetchJson<T>(url: string): Promise<T> {
 
 async function downloadBinary(url: string): Promise<Uint8Array> {
   const { fetch, ResponseType } = await import('@tauri-apps/api/http')
-  const response = await fetch<Uint8Array>(url, {
-    method: 'GET',
-    responseType: ResponseType.Binary,
-    headers: {
-      'User-Agent': 'Benchmaker',
-    },
-  })
+
+  let response
+  try {
+    response = await fetch<Uint8Array>(url, {
+      method: 'GET',
+      responseType: ResponseType.Binary,
+      headers: {
+        'User-Agent': 'Benchmaker',
+      },
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    throw new Error(`Download failed: ${message}`)
+  }
 
   if (!response.ok) {
     throw new Error(`Update download failed (${response.status})`)
