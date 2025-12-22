@@ -23,9 +23,9 @@
         "all": false,
         "request": true,
         "scope": [
-          "https://api.github.com/*",
-          "https://github.com/oshtz/Benchmaker/releases/*",
-          "https://objects.githubusercontent.com/*"
+          "https://api.github.com/**",
+          "https://github.com/oshtz/Benchmaker/releases/**",
+          "https://objects.githubusercontent.com/**"
         ]
       },
       "path": {
