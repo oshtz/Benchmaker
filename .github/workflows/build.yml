@@ -39,25 +39,42 @@ jobs:
       - name: Install Enigma Virtual Box
         shell: pwsh
         run: |
-          # Download EVB installer
-          $evbUrl = "https://enigmaprotector.com/assets/files/enigmavb.exe"
+          # Download EVB installer with multiple fallback sources
+          $evbUrls = @(
+            "https://www.enigmaprotector.com/assets/files/enigmavb.exe",
+            "https://enigmaprotector.com/assets/files/enigmavb.exe",
+            "https://web.archive.org/web/2024/https://enigmaprotector.com/assets/files/enigmavb.exe"
+          )
           $evbInstaller = Join-Path $env:RUNNER_TEMP "enigmavb_setup.exe"
           Remove-Item -Path $evbInstaller -Force -ErrorAction SilentlyContinue
+
           $downloaded = $false
-          for ($attempt = 1; $attempt -le 3; $attempt++) {
-            if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
-              curl.exe -L --retry 3 --retry-delay 2 --retry-all-errors --output $evbInstaller $evbUrl
-            } else {
-              Invoke-WebRequest -Uri $evbUrl -OutFile $evbInstaller -UseBasicParsing
+          foreach ($evbUrl in $evbUrls) {
+            Write-Host "Trying: $evbUrl"
+            for ($attempt = 1; $attempt -le 3; $attempt++) {
+              try {
+                # Use Invoke-WebRequest with browser-like headers
+                $headers = @{
+                  "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                  "Accept" = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+                }
+                Invoke-WebRequest -Uri $evbUrl -OutFile $evbInstaller -UseBasicParsing -Headers $headers -MaximumRedirection 5
+
+                if ((Test-Path $evbInstaller) -and (Get-Item $evbInstaller).Length -gt 1MB) {
+                  $downloaded = $true
+                  Write-Host "Downloaded successfully from $evbUrl"
+                  break
+                }
+              } catch {
+                Write-Host "Attempt $attempt failed: $_"
+              }
+              Start-Sleep -Seconds 2
             }
-            if ((Test-Path $evbInstaller) -and (Get-Item $evbInstaller).Length -gt 1MB) {
-              $downloaded = $true
-              break
-            }
-            Start-Sleep -Seconds 2
+            if ($downloaded) { break }
           }
+
           if (-not $downloaded) {
-            throw "Failed to download a valid EVB installer"
+            throw "Failed to download EVB installer. The enigmaprotector.com site may be blocking CI downloads. Consider caching the installer in a GitHub release."
           }
 
           # Install silently
