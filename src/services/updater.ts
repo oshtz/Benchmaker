@@ -135,18 +135,19 @@ export async function downloadUpdate(update: UpdateInfo): Promise<string> {
   }
 
   const binary = await downloadBinary(update.downloadUrl)
-  const { tempdir } = await import('@tauri-apps/api/os')
-  const { join } = await import('@tauri-apps/api/path')
-  const { createDir, writeBinaryFile } = await import('@tauri-apps/api/fs')
+  const { appLocalDataDir, join } = await import('@tauri-apps/api/path')
+  const { createDir, writeBinaryFile, BaseDirectory } = await import('@tauri-apps/api/fs')
 
-  const baseDir = await tempdir()
-  const updateDir = await join(baseDir, UPDATE_DIR_NAME)
-  await createDir(updateDir, { recursive: true })
+  const updateDir = UPDATE_DIR_NAME
+  await createDir(updateDir, { dir: BaseDirectory.AppLocalData, recursive: true })
 
   const fileName = `Benchmaker-${update.version}.exe`
-  const updatePath = await join(updateDir, fileName)
+  const updatePath = await join(await appLocalDataDir(), updateDir, fileName)
 
-  await writeBinaryFile({ path: updatePath, contents: binary })
+  await writeBinaryFile(
+    { path: `${updateDir}/${fileName}`, contents: binary },
+    { dir: BaseDirectory.AppLocalData }
+  )
   return updatePath
 }
 
