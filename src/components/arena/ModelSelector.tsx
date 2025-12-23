@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Search, Loader2, X } from 'lucide-react'
+import { Search, Loader2, X, SlidersHorizontal, Filter } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +7,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useModelStore } from '@/stores/modelStore'
+
+type PriceRange = 'all' | 'free' | 'cheap' | 'medium' | 'expensive'
+type ContextRange = 'all' | '8k+' | '32k+' | '128k+' | '200k+'
+
+const PRICE_RANGES: { value: PriceRange; label: string; max?: number; min?: number }[] = [
+  { value: 'all', label: 'All Prices' },
+  { value: 'free', label: 'Free', max: 0 },
+  { value: 'cheap', label: '<$1/M', max: 0.000001 },
+  { value: 'medium', label: '$1-10/M', min: 0.000001, max: 0.00001 },
+  { value: 'expensive', label: '>$10/M', min: 0.00001 },
+]
+
+const CONTEXT_RANGES: { value: ContextRange; label: string; min?: number }[] = [
+  { value: 'all', label: 'Any Context' },
+  { value: '8k+', label: '8K+', min: 8000 },
+  { value: '32k+', label: '32K+', min: 32000 },
+  { value: '128k+', label: '128K+', min: 128000 },
+  { value: '200k+', label: '200K+', min: 200000 },
+]
 
 export function ModelSelector() {
   const {
@@ -20,6 +39,9 @@ export function ModelSelector() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [providerFilter, setProviderFilter] = useState<string | null>(null)
+  const [priceFilter, setPriceFilter] = useState<PriceRange>('all')
+  const [contextFilter, setContextFilter] = useState<ContextRange>('all')
+  const [showFilters, setShowFilters] = useState(false)
   const searchTerm = searchQuery.trim().toLowerCase()
 
   // Extract unique providers
@@ -49,9 +71,34 @@ export function ModelSelector() {
       const matchesProvider =
         !providerFilter || model.id.startsWith(`${providerFilter}/`)
 
-      return matchesSearch && matchesProvider
+      // Price filter
+      const promptPrice = parseFloat(model.pricing.prompt) || 0
+      const priceRange = PRICE_RANGES.find((r) => r.value === priceFilter)
+      let matchesPrice = true
+      if (priceRange && priceFilter !== 'all') {
+        if (priceRange.max !== undefined && priceRange.min !== undefined) {
+          matchesPrice = promptPrice >= priceRange.min && promptPrice <= priceRange.max
+        } else if (priceRange.max !== undefined) {
+          matchesPrice = promptPrice <= priceRange.max
+        } else if (priceRange.min !== undefined) {
+          matchesPrice = promptPrice >= priceRange.min
+        }
+      }
+
+      // Context length filter
+      const contextRange = CONTEXT_RANGES.find((r) => r.value === contextFilter)
+      const matchesContext =
+        contextFilter === 'all' || (contextRange?.min !== undefined && model.context_length >= contextRange.min)
+
+      return matchesSearch && matchesProvider && matchesPrice && matchesContext
     })
-  }, [availableModels, searchTerm, providerFilter])
+  }, [availableModels, searchTerm, providerFilter, priceFilter, contextFilter])
+
+  const activeFilterCount = [
+    priceFilter !== 'all',
+    contextFilter !== 'all',
+    providerFilter !== null,
+  ].filter(Boolean).length
 
   const providersForTags = useMemo(() => {
     if (providerFilter && !providers.includes(providerFilter)) {
@@ -96,6 +143,13 @@ export function ModelSelector() {
     )
   }
 
+  const clearAllFilters = () => {
+    setProviderFilter(null)
+    setPriceFilter('all')
+    setContextFilter('all')
+    setSearchQuery('')
+  }
+
   return (
     <Card className="h-full min-h-0 flex flex-col">
       <CardHeader className="pb-3 shrink-0">
@@ -103,16 +157,32 @@ export function ModelSelector() {
           <div className="min-w-0">
             <CardTitle className="text-base sm:text-lg">Model Selection</CardTitle>
             <CardDescription className="text-xs sm:text-sm">
-              {selectedModelIds.length} model{selectedModelIds.length !== 1 ? 's' : ''}{' '}
-              queued
+              {filteredModels.length} of {availableModels.length} models
+              {selectedModelIds.length > 0 && ` • ${selectedModelIds.length} selected`}
             </CardDescription>
           </div>
-          {selectedModelIds.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={clearSelectedModels} className="shrink-0">
-              <X className="h-4 w-4 mr-1" />
-              Clear
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              variant={showFilters ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="relative"
+            >
+              <SlidersHorizontal className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
             </Button>
-          )}
+            {selectedModelIds.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={clearSelectedModels}>
+                <X className="h-4 w-4 mr-1" />
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
 
@@ -128,6 +198,54 @@ export function ModelSelector() {
             />
           </div>
         </div>
+
+        {showFilters && (
+          <div className="space-y-3 p-3 bg-muted/50 rounded-xl border border-border/50">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                <Filter className="h-3 w-3" />
+                Filters
+              </span>
+              {activeFilterCount > 0 && (
+                <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={clearAllFilters}>
+                  Clear all
+                </Button>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-xs text-muted-foreground">Price (per 1M tokens)</span>
+              <div className="flex flex-wrap gap-1.5">
+                {PRICE_RANGES.map((range) => (
+                  <Badge
+                    key={range.value}
+                    variant={priceFilter === range.value ? 'default' : 'outline'}
+                    className="cursor-pointer text-xs"
+                    onClick={() => setPriceFilter(range.value)}
+                  >
+                    {range.label}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-xs text-muted-foreground">Context Length</span>
+              <div className="flex flex-wrap gap-1.5">
+                {CONTEXT_RANGES.map((range) => (
+                  <Badge
+                    key={range.value}
+                    variant={contextFilter === range.value ? 'default' : 'outline'}
+                    className="cursor-pointer text-xs"
+                    onClick={() => setContextFilter(range.value)}
+                  >
+                    {range.label}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div
           className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hidden"

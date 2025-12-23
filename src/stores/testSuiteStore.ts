@@ -18,6 +18,7 @@ interface TestSuiteState {
 
   // Test Case Actions
   addTestCase: (testSuiteId: string, testCase: Omit<TestCase, 'id'>) => TestCase
+  addTestCases: (testSuiteId: string, testCases: Omit<TestCase, 'id'>[]) => TestCase[]
   updateTestCase: (testSuiteId: string, testCaseId: string, updates: Partial<Omit<TestCase, 'id'>>) => void
   deleteTestCase: (testSuiteId: string, testCaseId: string) => void
   reorderTestCases: (testSuiteId: string, testCaseIds: string[]) => void
@@ -111,6 +112,25 @@ export const useTestSuiteStore = create<TestSuiteState>()((set, get) => ({
       ),
     }))
     return newTestCase
+  },
+
+  addTestCases: (testSuiteId, testCasesData) => {
+    const newTestCases: TestCase[] = testCasesData.map((tc) => ({
+      id: generateId(),
+      ...tc,
+    }))
+    set((state) => ({
+      testSuites: state.testSuites.map((suite) =>
+        suite.id === testSuiteId
+          ? {
+              ...suite,
+              testCases: [...suite.testCases, ...newTestCases],
+              updatedAt: Date.now(),
+            }
+          : suite
+      ),
+    }))
+    return newTestCases
   },
 
   updateTestCase: (testSuiteId, testCaseId, updates) => {
