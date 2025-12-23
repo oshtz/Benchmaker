@@ -83,6 +83,9 @@ export interface TestCaseResult {
   modelId: string
   response: string
   tokenCount?: number
+  promptTokens?: number
+  completionTokens?: number
+  cost?: number // Cost in USD
   latencyMs?: number
   status: ExecutionStatus
   error?: string

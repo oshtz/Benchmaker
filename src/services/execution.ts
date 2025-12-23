@@ -1,8 +1,23 @@
-import { getOpenRouterClient } from './openrouter'
+import { getOpenRouterClient, type StreamResult } from './openrouter'
 import { useRunStore } from '@/stores/runStore'
 import { useModelStore } from '@/stores/modelStore'
 import { scoreResponse } from '@/scoring'
-import type { TestSuite, TestCaseResult, ChatMessage, ModelParameters } from '@/types'
+import type { TestSuite, TestCaseResult, ChatMessage, ModelParameters, OpenRouterModel } from '@/types'
+
+function calculateCost(
+  usage: StreamResult['usage'],
+  model: OpenRouterModel | undefined
+): number | undefined {
+  if (!usage || !model) return undefined
+
+  const promptPrice = parseFloat(model.pricing.prompt) || 0
+  const completionPrice = parseFloat(model.pricing.completion) || 0
+
+  const promptCost = usage.prompt_tokens * promptPrice
+  const completionCost = usage.completion_tokens * completionPrice
+
+  return promptCost + completionCost
+}
 
 export async function executeRun(
   runId: string,
@@ -12,7 +27,10 @@ export async function executeRun(
 ): Promise<void> {
   const client = getOpenRouterClient(apiKey)
   const { addResult, updateResult, setResultScore, completeRun } = useRunStore.getState()
-  const { selectedModelIds, parameters, judgeModelId } = useModelStore.getState()
+  const { selectedModelIds, parameters, judgeModelId, availableModels } = useModelStore.getState()
+
+  // Create a map for quick model lookup
+  const modelMap = new Map(availableModels.map(m => [m.id, m]))
 
   // Create initial result entries for all test case + model combinations
   for (const testCase of testSuite.testCases) {
@@ -59,7 +77,7 @@ export async function executeRun(
             content: testCase.prompt,
           })
 
-          const fullResponse = await generateResponseWithRetries(
+          const { content: fullResponse, usage } = await generateResponseWithRetries(
             client,
             modelId,
             messages,
@@ -71,11 +89,16 @@ export async function executeRun(
           )
 
           const latencyMs = Date.now() - startTime
+          const model = modelMap.get(modelId)
+          const cost = calculateCost(usage, model)
 
           updateResult(runId, testCase.id, modelId, {
             response: fullResponse,
             status: 'completed',
             latencyMs,
+            promptTokens: usage?.prompt_tokens,
+            completionTokens: usage?.completion_tokens,
+            cost,
           })
 
           // Score the response
@@ -112,6 +135,11 @@ export async function executeRun(
 const MAX_EMPTY_RESPONSE_RETRIES = 2
 const EMPTY_RESPONSE_BACKOFF_MS = 400
 
+interface ResponseWithUsage {
+  content: string
+  usage?: StreamResult['usage']
+}
+
 async function generateResponseWithRetries(
   client: ReturnType<typeof getOpenRouterClient>,
   modelId: string,
@@ -121,47 +149,49 @@ async function generateResponseWithRetries(
   testCaseId: string,
   signal: AbortSignal,
   updateResult: (runId: string, testCaseId: string, modelId: string, updates: Partial<TestCaseResult>) => void
-): Promise<string> {
+): Promise<ResponseWithUsage> {
   for (let attempt = 0; attempt <= MAX_EMPTY_RESPONSE_RETRIES; attempt++) {
-    let fullResponse = ''
     updateResult(runId, testCaseId, modelId, { streamedContent: '' })
 
-    const stream = client.createChatCompletionStream({
-      model: modelId,
-      messages,
-      temperature: parameters.temperature,
-      top_p: parameters.topP,
-      max_tokens: parameters.maxTokens,
-      frequency_penalty: parameters.frequencyPenalty,
-      presence_penalty: parameters.presencePenalty,
-    })
+    if (signal.aborted) {
+      throw new DOMException('Aborted', 'AbortError')
+    }
 
-    for await (const chunk of stream) {
-      if (signal.aborted) {
-        throw new DOMException('Aborted', 'AbortError')
+    let streamedContent = ''
+    const result = await client.createChatCompletionStreamWithUsage(
+      {
+        model: modelId,
+        messages,
+        temperature: parameters.temperature,
+        top_p: parameters.topP,
+        max_tokens: parameters.maxTokens,
+        frequency_penalty: parameters.frequencyPenalty,
+        presence_penalty: parameters.presencePenalty,
+      },
+      (chunk) => {
+        streamedContent += chunk
+        updateResult(runId, testCaseId, modelId, {
+          streamedContent,
+        })
       }
-      fullResponse += chunk
-      updateResult(runId, testCaseId, modelId, {
-        streamedContent: fullResponse,
-      })
+    )
+
+    if (result.content.trim().length > 0) {
+      return result
     }
 
-    if (fullResponse.trim().length > 0) {
-      return fullResponse
-    }
-
-    const fallbackResponse = await fetchNonStreamingResponse(
+    const fallbackResult = await fetchNonStreamingResponse(
       client,
       modelId,
       messages,
       parameters,
       signal
     )
-    if (fallbackResponse.trim().length > 0) {
+    if (fallbackResult.content.trim().length > 0) {
       updateResult(runId, testCaseId, modelId, {
-        streamedContent: fallbackResponse,
+        streamedContent: fallbackResult.content,
       })
-      return fallbackResponse
+      return fallbackResult
     }
 
     if (attempt < MAX_EMPTY_RESPONSE_RETRIES) {
@@ -172,7 +202,7 @@ async function generateResponseWithRetries(
     }
   }
 
-  return ''
+  return { content: '' }
 }
 
 async function fetchNonStreamingResponse(
@@ -181,7 +211,7 @@ async function fetchNonStreamingResponse(
   messages: ChatMessage[],
   parameters: ModelParameters,
   signal: AbortSignal
-): Promise<string> {
+): Promise<ResponseWithUsage> {
   if (signal.aborted) {
     throw new DOMException('Aborted', 'AbortError')
   }
@@ -198,9 +228,12 @@ async function fetchNonStreamingResponse(
     })
 
     const content = completion.choices?.[0]?.message?.content
-    return typeof content === 'string' ? content : ''
+    return {
+      content: typeof content === 'string' ? content : '',
+      usage: completion.usage,
+    }
   } catch {
-    return ''
+    return { content: '' }
   }
 }
 

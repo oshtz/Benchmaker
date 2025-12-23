@@ -1,4 +1,4 @@
-import { Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Clock, CheckCircle, XCircle, AlertCircle, DollarSign } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -9,9 +9,18 @@ interface ReportSummaryProps {
   run: RunResult
 }
 
+function formatCost(cost: number): string {
+  if (cost === 0) return '$0.00'
+  if (cost < 0.0001) return '<$0.0001'
+  if (cost < 0.01) return `$${cost.toFixed(4)}`
+  return `$${cost.toFixed(2)}`
+}
+
 export function ReportSummary({ run }: ReportSummaryProps) {
-  const { getAggregateScores } = useRunStore()
+  const { getAggregateScores, getTotalCost, getAggregateCosts } = useRunStore()
   const scores = getAggregateScores(run.id)
+  const totalCost = getTotalCost(run.id)
+  const modelCosts = getAggregateCosts(run.id)
 
   const duration = run.completedAt
     ? ((run.completedAt - run.startedAt) / 1000).toFixed(1)
@@ -59,8 +68,11 @@ export function ReportSummary({ run }: ReportSummaryProps) {
 
   const sortedModels = Array.from(scores.entries()).sort((a, b) => b[1] - a[1])
 
+  // Sort models by cost (cheapest first) for display
+  const sortedByCost = Array.from(modelCosts.entries()).sort((a, b) => a[1] - b[1])
+
   return (
-    <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-5">
       <Card className="relative overflow-hidden col-span-2 sm:col-span-1">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
         <CardHeader className="pb-2">
@@ -124,7 +136,7 @@ export function ReportSummary({ run }: ReportSummaryProps) {
         </CardContent>
       </Card>
 
-      <Card className="col-span-2 sm:col-span-1">
+      <Card className="col-span-1">
         <CardHeader className="pb-2">
           <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
             Top Model
@@ -142,6 +154,25 @@ export function ReportSummary({ run }: ReportSummaryProps) {
             </div>
           ) : (
             <div className="text-sm text-muted-foreground">No scores yet</div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="col-span-2 sm:col-span-1">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1">
+            <DollarSign className="h-3 w-3" />
+            Total Cost
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-xl sm:text-2xl font-semibold">
+            {formatCost(totalCost)}
+          </div>
+          {sortedByCost.length > 0 && (
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+              Cheapest: {sortedByCost[0][0].split('/').pop()} ({formatCost(sortedByCost[0][1])})
+            </p>
           )}
         </CardContent>
       </Card>

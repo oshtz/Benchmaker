@@ -25,6 +25,8 @@ interface RunState {
   getResultsForTestCase: (runId: string, testCaseId: string) => TestCaseResult[]
   getResultsForModel: (runId: string, modelId: string) => TestCaseResult[]
   getAggregateScores: (runId: string) => Map<string, number>
+  getAggregateCosts: (runId: string) => Map<string, number>
+  getTotalCost: (runId: string) => number
 }
 
 function generateId(): string {
@@ -177,5 +179,30 @@ export const useRunStore = create<RunState>()((set, get) => ({
     }
 
     return scores
+  },
+
+  getAggregateCosts: (runId) => {
+    const run = get().runs.find((r) => r.id === runId)
+    const costs = new Map<string, number>()
+
+    if (!run) return costs
+
+    for (const result of run.results) {
+      if (result.cost !== undefined) {
+        const existing = costs.get(result.modelId) || 0
+        costs.set(result.modelId, existing + result.cost)
+      }
+    }
+
+    return costs
+  },
+
+  getTotalCost: (runId) => {
+    const run = get().runs.find((r) => r.id === runId)
+    if (!run) return 0
+
+    return run.results.reduce((total, result) => {
+      return total + (result.cost || 0)
+    }, 0)
   },
 }))

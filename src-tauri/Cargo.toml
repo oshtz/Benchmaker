@@ -1,6 +1,6 @@
 [package]
 name = "benchmaker"
-version = "0.0.8"
+version = "0.0.9"
 description = "Benchmaker"
 authors = ["you"]
 edition = "2021"
