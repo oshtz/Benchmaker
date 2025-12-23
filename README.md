@@ -1,10 +1,12 @@
-# Benchmaker
-
-<p align="center">
-  <img src="app-white.png" alt="Benchmaker Application Screenshot" width="800" />
-</p>
-
-A modular, visual LLM benchmarking desktop application for scientifically comparing multiple Large Language Models under identical conditions.
+<table>
+  <tr>
+    <td><img src="app-white.png" alt="Benchmaker" width="150" /></td>
+    <td>
+      <h1>Benchmaker</h1>
+      <p>A modular, visual LLM benchmarking desktop application for scientifically comparing multiple Large Language Models under identical conditions.</p>
+    </td>
+  </tr>
+</table>
 
 ## Overview
 
