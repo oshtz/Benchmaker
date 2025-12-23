@@ -1061,7 +1061,7 @@ fn apply_update(app: AppHandle, update_path: String) -> Result<(), String> {
     let pid = std::process::id();
 
     let script = format!(
-        "$pid = {pid}; $source = '{source}'; $target = '{target}'; while (Get-Process -Id $pid -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 200 }}; Move-Item -Force $source $target; Start-Process $target",
+        "$procId = {pid}; $source = '{source}'; $target = '{target}'; while (Get-Process -Id $procId -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 200 }}; Move-Item -Force $source $target; Start-Process $target",
         pid = pid,
         source = escape_powershell_literal(&update_file.to_string_lossy()),
         target = escape_powershell_literal(&current_exe.to_string_lossy()),
