@@ -199,12 +199,14 @@ export function LocalDbPanel() {
         }
 
         const normalized: BenchmakerDb = {
-          version: typeof parsed.version === 'number' ? parsed.version : 2,
+          version: typeof parsed.version === 'number' ? parsed.version : 3,
           updatedAt: Date.now(),
           testSuites: parsed.testSuites,
           runs: parsed.runs,
+          codeArenaRuns: Array.isArray(parsed.codeArenaRuns) ? parsed.codeArenaRuns : [],
           activeTestSuiteId: parsed.activeTestSuiteId ?? null,
           currentRunId: parsed.currentRunId ?? null,
+          currentCodeArenaRunId: parsed.currentCodeArenaRunId ?? null,
         }
 
         hydrateFromDb(normalized)
@@ -227,12 +229,14 @@ export function LocalDbPanel() {
       }
 
       const normalized: BenchmakerDb = {
-        version: typeof parsed.version === 'number' ? parsed.version : 2,
+        version: typeof parsed.version === 'number' ? parsed.version : 3,
         updatedAt: Date.now(),
         testSuites: parsed.testSuites,
         runs: parsed.runs,
+        codeArenaRuns: Array.isArray(parsed.codeArenaRuns) ? parsed.codeArenaRuns : [],
         activeTestSuiteId: parsed.activeTestSuiteId ?? null,
         currentRunId: parsed.currentRunId ?? null,
+        currentCodeArenaRunId: parsed.currentCodeArenaRunId ?? null,
       }
 
       hydrateFromDb(normalized)

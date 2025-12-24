@@ -29,7 +29,7 @@ export function Header() {
         </div>
 
         <div className="flex-1 px-3 sm:px-4 min-w-0">
-          <MainTabsList className="mx-auto max-w-md sm:max-w-lg" />
+          <MainTabsList className="mx-auto max-w-2xl" />
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">

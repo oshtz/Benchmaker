@@ -186,7 +186,7 @@ Enter your OpenRouter API key in the Settings (gear icon in header).
 
 ### Updates
 - The app checks for updates on startup
-- Click the version button in the header (e.g. `v0.0.9`) to view update status, release notes, or manually re-check
+- Click the version button in the header (e.g. `v0.1.0`) to view update status, release notes, or manually re-check
 - Updates are pulled from GitHub Releases and expect a `Benchmaker-Portable.exe` asset on the latest tag
 
 ## Development
