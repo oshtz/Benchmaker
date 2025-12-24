@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useModelStore } from '@/stores/modelStore'
+import { useCodeArenaStore } from '@/stores/codeArenaStore'
 
 type PriceRange = 'all' | 'free' | 'cheap' | 'medium' | 'expensive'
 type ContextRange = 'all' | '8k+' | '32k+' | '128k+' | '200k+'
@@ -27,15 +28,32 @@ const CONTEXT_RANGES: { value: ContextRange; label: string; min?: number }[] = [
   { value: '200k+', label: '200K+', min: 200000 },
 ]
 
-export function ModelSelector() {
+interface ModelSelectorProps {
+  useCodeArenaStore?: boolean
+}
+
+export function ModelSelector({ useCodeArenaStore: useCodeArena = false }: ModelSelectorProps) {
+  const modelStore = useModelStore()
+  const codeArenaStore = useCodeArenaStore()
+  
+  // Use the appropriate store based on the prop
   const {
     availableModels,
-    selectedModelIds,
-    toggleModelSelection,
-    clearSelectedModels,
     isLoadingModels,
     modelsError,
-  } = useModelStore()
+  } = modelStore
+  
+  const selectedModelIds = useCodeArena
+    ? codeArenaStore.selectedModelIds
+    : modelStore.selectedModelIds
+    
+  const toggleModelSelection = useCodeArena
+    ? codeArenaStore.toggleModelSelection
+    : modelStore.toggleModelSelection
+    
+  const clearSelectedModels = useCodeArena
+    ? () => codeArenaStore.setSelectedModelIds([])
+    : modelStore.clearSelectedModels
 
   const [searchQuery, setSearchQuery] = useState('')
   const [providerFilter, setProviderFilter] = useState<string | null>(null)

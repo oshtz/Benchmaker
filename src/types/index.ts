@@ -106,6 +106,35 @@ export interface RunResult {
   judgeModel?: string
 }
 
+// Code Arena Types
+export interface CodeArenaOutput {
+  modelId: string
+  rawResponse: string
+  extractedCode: string
+  status: ExecutionStatus
+  error?: string
+  latencyMs?: number
+  promptTokens?: number
+  completionTokens?: number
+  cost?: number
+  streamedContent?: string
+  score?: ScoringResult
+}
+
+export interface CodeArenaRun {
+  id: string
+  type: 'code-arena'
+  prompt: string
+  systemPrompt: string
+  models: string[]
+  parameters: ModelParameters
+  outputs: CodeArenaOutput[]
+  status: ExecutionStatus
+  startedAt: number
+  completedAt?: number
+  judgeModelId?: string
+}
+
 // Settings Types
 export interface Settings {
   apiKey: string
@@ -120,8 +149,10 @@ export interface BenchmakerDb {
   updatedAt: number
   testSuites: TestSuite[]
   runs: RunResult[]
+  codeArenaRuns: CodeArenaRun[]
   activeTestSuiteId: string | null
   currentRunId: string | null
+  currentCodeArenaRunId: string | null
 }
 
 // OpenRouter API Types

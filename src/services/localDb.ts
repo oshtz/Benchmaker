@@ -1,8 +1,9 @@
 import type { BenchmakerDb } from '@/types'
 import { useTestSuiteStore } from '@/stores/testSuiteStore'
 import { useRunStore } from '@/stores/runStore'
+import { useCodeArenaRunStore } from '@/stores/codeArenaRunStore'
 
-const DB_VERSION = 2
+const DB_VERSION = 3
 const WRITE_THROTTLE_MS = 300
 
 let initialized = false
@@ -32,8 +33,10 @@ function normalizeSnapshot(parsed: Partial<BenchmakerDb> | null): BenchmakerDb |
     updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : Date.now(),
     testSuites: parsed.testSuites,
     runs: parsed.runs,
+    codeArenaRuns: Array.isArray(parsed.codeArenaRuns) ? parsed.codeArenaRuns : [],
     activeTestSuiteId: parsed.activeTestSuiteId ?? null,
     currentRunId: parsed.currentRunId ?? null,
+    currentCodeArenaRunId: parsed.currentCodeArenaRunId ?? null,
   }
 }
 
@@ -57,6 +60,7 @@ export async function initLocalDb(): Promise<void> {
 
   useTestSuiteStore.subscribe(() => scheduleWrite())
   useRunStore.subscribe(() => scheduleWrite())
+  useCodeArenaRunStore.subscribe(() => scheduleWrite())
 }
 
 export async function readLocalDb(): Promise<BenchmakerDb | null> {
@@ -84,14 +88,17 @@ export async function writeLocalDb(snapshot: BenchmakerDb): Promise<void> {
 export function buildSnapshot(): BenchmakerDb {
   const testSuiteState = useTestSuiteStore.getState()
   const runState = useRunStore.getState()
+  const codeArenaRunState = useCodeArenaRunStore.getState()
 
   return {
     version: DB_VERSION,
     updatedAt: Date.now(),
     testSuites: testSuiteState.testSuites,
     runs: runState.runs,
+    codeArenaRuns: codeArenaRunState.runs,
     activeTestSuiteId: testSuiteState.activeTestSuiteId,
     currentRunId: runState.currentRunId,
+    currentCodeArenaRunId: codeArenaRunState.currentRunId,
   }
 }
 
@@ -103,6 +110,10 @@ export function hydrateFromDb(snapshot: BenchmakerDb): void {
   useRunStore.setState({
     runs: snapshot.runs || [],
     currentRunId: snapshot.currentRunId ?? null,
+  })
+  useCodeArenaRunStore.setState({
+    runs: snapshot.codeArenaRuns || [],
+    currentRunId: snapshot.currentCodeArenaRunId ?? null,
   })
 }
 
