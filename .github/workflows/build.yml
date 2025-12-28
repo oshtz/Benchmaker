@@ -238,7 +238,6 @@ jobs:
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
             --password "$APPLE_PASSWORD"
-          xcrun notarytool list-profiles
 
       - name: Build Tauri app (dmg)
         env:
