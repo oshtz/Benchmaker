@@ -224,12 +224,30 @@ jobs:
           security default-keychain -s build.keychain
           security find-identity -v -p codesigning build.keychain
 
+      - name: Verify notarization credentials
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$APPLE_ID" ] || [ -z "$APPLE_PASSWORD" ] || [ -z "$APPLE_TEAM_ID" ]; then
+            echo "Missing notarization secrets (APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID)."
+            exit 1
+          fi
+          xcrun notarytool store-credentials "notarytool-profile" \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_PASSWORD"
+          xcrun notarytool list-profiles
+
       - name: Build Tauri app (dmg)
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          RUST_LOG: tauri_bundler=debug
+          RUST_BACKTRACE: 1
         run: npm run tauri:build -- --bundles dmg
 
       - name: Upload dmg
