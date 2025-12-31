@@ -1,22 +1,34 @@
-import { useRef } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useState } from 'react'
 
 interface CodeEditorViewProps {
   code: string
   className?: string
   showLineNumbers?: boolean
+  isStreaming?: boolean
 }
 
 export function CodeEditorView({ 
   code, 
   className = '',
-  showLineNumbers = true 
+  showLineNumbers = true,
+  isStreaming = false
 }: CodeEditorViewProps) {
   const [copied, setCopied] = useState(false)
   const codeRef = useRef<HTMLPreElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to bottom when streaming
+  useEffect(() => {
+    if (isStreaming && scrollAreaRef.current) {
+      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight
+      }
+    }
+  }, [code, isStreaming])
 
   const handleCopy = async () => {
     try {
@@ -115,7 +127,7 @@ export function CodeEditorView({
         )}
       </Button>
 
-      <ScrollArea className="h-full">
+      <ScrollArea className="h-full" ref={scrollAreaRef}>
         <div className="flex text-sm font-mono">
           {/* Line numbers */}
           {showLineNumbers && (

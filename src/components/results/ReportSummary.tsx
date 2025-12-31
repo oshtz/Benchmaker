@@ -124,15 +124,20 @@ export function ReportSummary({ run }: ReportSummaryProps) {
               <span className="text-base sm:text-lg font-semibold">{completedCount}</span>
             </div>
             {failedCount > 0 && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1" title={run.errorSummary || `${failedCount} task(s) failed`}>
                 <XCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-rose-500" />
                 <span className="text-base sm:text-lg font-semibold">{failedCount}</span>
               </div>
             )}
           </div>
           <p className="text-[10px] sm:text-xs text-muted-foreground">
-            {run.models.length} models × {totalCount} tests
+            {run.models.length} models × {Math.round(totalCount / run.models.length)} tests
           </p>
+          {run.errorSummary && (
+            <p className="text-[10px] sm:text-xs text-rose-500 mt-1 line-clamp-2" title={run.errorSummary}>
+              {run.errorSummary}
+            </p>
+          )}
         </CardContent>
       </Card>
 

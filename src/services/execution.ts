@@ -27,7 +27,10 @@ export async function executeRun(
 ): Promise<void> {
   const client = getOpenRouterClient(apiKey)
   const { addResult, updateResult, setResultScore, completeRun } = useRunStore.getState()
-  const { selectedModelIds, parameters, judgeModelId, availableModels } = useModelStore.getState()
+  const { selectedModelIds, judgeModelId, availableModels, getEffectiveParameters } = useModelStore.getState()
+  
+  // Use effective parameters (respects benchmark mode)
+  const parameters = getEffectiveParameters()
 
   // Create a map for quick model lookup
   const modelMap = new Map(availableModels.map(m => [m.id, m]))
@@ -127,17 +130,44 @@ export async function executeRun(
   }
 
   // Execute with concurrency limit
-  await executeWithConcurrency(tasks, concurrencyLimit, signal)
+  const executionErrors = await executeWithConcurrency(tasks, concurrencyLimit, signal)
 
-  completeRun(runId)
+  // Complete run with error summary if any errors occurred
+  completeRun(runId, executionErrors.count > 0 ? {
+    errorCount: executionErrors.count,
+    errorSummary: executionErrors.summary,
+  } : undefined)
 }
 
 const MAX_EMPTY_RESPONSE_RETRIES = 2
 const EMPTY_RESPONSE_BACKOFF_MS = 400
+// Per-request timeout in milliseconds (2 minutes)
+const REQUEST_TIMEOUT_MS = 120000
 
 interface ResponseWithUsage {
   content: string
   usage?: StreamResult['usage']
+}
+
+/**
+ * Wraps a promise with a timeout. If the timeout expires, throws an error.
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(errorMessage))
+    }, timeoutMs)
+
+    promise
+      .then((result) => {
+        clearTimeout(timeoutId)
+        resolve(result)
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId)
+        reject(error)
+      })
+  })
 }
 
 async function generateResponseWithRetries(
@@ -158,7 +188,7 @@ async function generateResponseWithRetries(
     }
 
     let streamedContent = ''
-    const result = await client.createChatCompletionStreamWithUsage(
+    const streamPromise = client.createChatCompletionStreamWithUsage(
       {
         model: modelId,
         messages,
@@ -174,6 +204,13 @@ async function generateResponseWithRetries(
           streamedContent,
         })
       }
+    )
+    
+    // Apply timeout to the streaming request
+    const result = await withTimeout(
+      streamPromise,
+      REQUEST_TIMEOUT_MS,
+      `Request timed out after ${REQUEST_TIMEOUT_MS / 1000}s`
     )
 
     if (result.content.trim().length > 0) {
@@ -243,11 +280,17 @@ function delay(ms: number): Promise<void> {
   })
 }
 
+export interface ExecutionErrors {
+  count: number
+  summary: string
+  details: Error[]
+}
+
 async function executeWithConcurrency(
   tasks: Array<() => Promise<void>>,
   limit: number,
   signal: AbortSignal
-): Promise<void> {
+): Promise<ExecutionErrors> {
   const executing = new Set<Promise<void>>()
   const errors: Error[] = []
 
@@ -279,7 +322,18 @@ async function executeWithConcurrency(
 
   await Promise.all(executing)
 
+  // Build error summary
+  const errorSummary = errors.length > 0 
+    ? `${errors.length} task(s) failed: ${[...new Set(errors.map(e => e.message))].join('; ')}`
+    : ''
+
   if (errors.length > 0) {
     console.error('Some tasks failed:', errors)
+  }
+
+  return {
+    count: errors.length,
+    summary: errorSummary,
+    details: errors,
   }
 }

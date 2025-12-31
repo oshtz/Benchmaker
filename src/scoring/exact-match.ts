@@ -23,29 +23,59 @@ export function scoreExactMatch(response: string, expected: string): ScoringResu
   // Case-insensitive match
   if (normalizedResponse.toLowerCase() === normalizedExpected.toLowerCase()) {
     return {
-      score: 0.9,
+      score: 0.95, // Very high but not perfect (case matters slightly)
       confidence: 1,
       notes: 'Case-insensitive match',
     }
   }
 
+  // Calculate similarity using Levenshtein distance
+  const similarity = calculateSimilarity(normalizedResponse, normalizedExpected)
+  
   // Check if response contains the expected (for longer responses)
+  // Score based on how much extra content surrounds the expected output
   if (normalizedResponse.includes(normalizedExpected)) {
+    // Penalize based on how much extra content there is
+    const extraContentRatio = 1 - (normalizedExpected.length / normalizedResponse.length)
+    // Score from 0.95 (exact length match) down to 0.6 (lots of extra content)
+    const containsScore = Math.max(0.6, 0.95 - (extraContentRatio * 0.35))
     return {
-      score: 0.7,
-      confidence: 0.8,
-      notes: 'Expected output found within response',
+      score: containsScore,
+      confidence: 0.9,
+      notes: `Expected output found within response (${(extraContentRatio * 100).toFixed(0)}% extra content)`,
     }
   }
 
-  // Calculate similarity for partial matches
-  const similarity = calculateSimilarity(normalizedResponse, normalizedExpected)
-
-  if (similarity > 0.8) {
+  // Case-insensitive contains check
+  if (normalizedResponse.toLowerCase().includes(normalizedExpected.toLowerCase())) {
+    const extraContentRatio = 1 - (normalizedExpected.length / normalizedResponse.length)
+    const containsScore = Math.max(0.55, 0.90 - (extraContentRatio * 0.35))
     return {
-      score: similarity * 0.8,
-      confidence: 0.6,
-      notes: `High similarity (${(similarity * 100).toFixed(1)}%)`,
+      score: containsScore,
+      confidence: 0.85,
+      notes: `Expected output found (case-insensitive, ${(extraContentRatio * 100).toFixed(0)}% extra content)`,
+    }
+  }
+
+  // Use similarity for partial matches - continuous scoring
+  // Similarity of 1.0 = perfect match, 0.0 = completely different
+  if (similarity > 0.5) {
+    // Scale similarity to 0-0.7 range for partial matches
+    // This ensures partial matches never score higher than contains matches
+    const score = similarity * 0.7
+    return {
+      score,
+      confidence: Math.max(0.4, similarity * 0.8),
+      notes: `Partial similarity: ${(similarity * 100).toFixed(1)}%`,
+    }
+  }
+
+  // Very low similarity - use raw similarity scaled down
+  if (similarity > 0.2) {
+    return {
+      score: similarity * 0.4, // Max 0.2 score for low similarity
+      confidence: 0.3,
+      notes: `Low similarity: ${(similarity * 100).toFixed(1)}%`,
     }
   }
 

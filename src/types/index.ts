@@ -51,6 +51,29 @@ export interface ScoringConfig {
   rubric?: string
 }
 
+// Aggregate scoring with statistics
+export interface AggregateScore {
+  mean: number           // Weighted mean score (0-1)
+  stdDev: number         // Standard deviation
+  min: number            // Minimum score
+  max: number            // Maximum score
+  count: number          // Number of scored results
+  totalWeight: number    // Sum of weights used
+  confidence95?: [number, number]  // 95% confidence interval
+}
+
+// Multi-run statistics
+export interface MultiRunStats {
+  runIds: string[]
+  modelId: string
+  scores: number[]       // Individual run scores
+  mean: number
+  stdDev: number
+  min: number
+  max: number
+  confidence95: [number, number]
+}
+
 // Model Types
 export interface OpenRouterModel {
   id: string
@@ -73,6 +96,7 @@ export interface ModelParameters {
   maxTokens: number
   frequencyPenalty: number
   presencePenalty: number
+  benchmarkMode?: boolean  // When true, uses temp=0 for reproducibility
 }
 
 // Execution Types
@@ -104,6 +128,9 @@ export interface RunResult {
   startedAt: number
   completedAt?: number
   judgeModel?: string
+  // Error tracking for surfacing in UI
+  errorCount?: number
+  errorSummary?: string
 }
 
 // Code Arena Types

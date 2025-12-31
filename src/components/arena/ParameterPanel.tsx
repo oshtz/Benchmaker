@@ -1,13 +1,14 @@
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, FlaskConical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
+import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useModelStore } from '@/stores/modelStore'
 
 export function ParameterPanel() {
-  const { parameters, setParameters, resetParameters } = useModelStore()
+  const { parameters, setParameters, resetParameters, toggleBenchmarkMode } = useModelStore()
 
   return (
     <Card>
@@ -24,19 +25,37 @@ export function ParameterPanel() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3 sm:space-y-4">
+        {/* Benchmark Mode Toggle */}
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+          <div className="flex items-center gap-2">
+            <FlaskConical className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <Label htmlFor="benchmark-mode" className="cursor-pointer">Benchmark Mode</Label>
+              <p className="text-xs text-muted-foreground">Uses temp=0 for reproducible results</p>
+            </div>
+          </div>
+          <Switch
+            id="benchmark-mode"
+            checked={parameters.benchmarkMode ?? false}
+            onCheckedChange={toggleBenchmarkMode}
+          />
+        </div>
+
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Temperature</Label>
             <span className="text-sm text-muted-foreground">
-              {parameters.temperature.toFixed(2)}
+              {parameters.benchmarkMode ? '0.00 (locked)' : parameters.temperature.toFixed(2)}
             </span>
           </div>
           <Slider
-            value={[parameters.temperature]}
+            value={[parameters.benchmarkMode ? 0 : parameters.temperature]}
             onValueChange={([v]) => setParameters({ temperature: v })}
             min={0}
             max={2}
             step={0.01}
+            disabled={parameters.benchmarkMode}
+            className={parameters.benchmarkMode ? 'opacity-50' : ''}
           />
         </div>
 
@@ -74,15 +93,17 @@ export function ParameterPanel() {
           <div className="flex items-center justify-between">
             <Label>Frequency Penalty</Label>
             <span className="text-sm text-muted-foreground">
-              {parameters.frequencyPenalty.toFixed(2)}
+              {parameters.benchmarkMode ? '0.00 (locked)' : parameters.frequencyPenalty.toFixed(2)}
             </span>
           </div>
           <Slider
-            value={[parameters.frequencyPenalty]}
+            value={[parameters.benchmarkMode ? 0 : parameters.frequencyPenalty]}
             onValueChange={([v]) => setParameters({ frequencyPenalty: v })}
             min={-2}
             max={2}
             step={0.01}
+            disabled={parameters.benchmarkMode}
+            className={parameters.benchmarkMode ? 'opacity-50' : ''}
           />
         </div>
 
@@ -90,15 +111,17 @@ export function ParameterPanel() {
           <div className="flex items-center justify-between">
             <Label>Presence Penalty</Label>
             <span className="text-sm text-muted-foreground">
-              {parameters.presencePenalty.toFixed(2)}
+              {parameters.benchmarkMode ? '0.00 (locked)' : parameters.presencePenalty.toFixed(2)}
             </span>
           </div>
           <Slider
-            value={[parameters.presencePenalty]}
+            value={[parameters.benchmarkMode ? 0 : parameters.presencePenalty]}
             onValueChange={([v]) => setParameters({ presencePenalty: v })}
             min={-2}
             max={2}
             step={0.01}
+            disabled={parameters.benchmarkMode}
+            className={parameters.benchmarkMode ? 'opacity-50' : ''}
           />
         </div>
       </CardContent>

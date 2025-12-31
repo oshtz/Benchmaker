@@ -15,6 +15,7 @@ import { useTestSuiteStore } from '@/stores/testSuiteStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { ComparisonGrid } from './ComparisonGrid'
 import { ReportSummary } from './ReportSummary'
+import { MultiRunAnalysis } from './MultiRunAnalysis'
 
 export function Results() {
   const { runs, currentRunId, setCurrentRun, deleteRun } = useRunStore()
@@ -112,6 +113,9 @@ export function Results() {
         <div className="flex-1 min-h-0 flex flex-col gap-6">
           <div className="shrink-0">
             <ReportSummary run={currentRun} />
+          </div>
+          <div className="shrink-0">
+            <MultiRunAnalysis currentRun={currentRun} />
           </div>
           <div className="flex-1 min-h-0">
             <ComparisonGrid run={currentRun} />

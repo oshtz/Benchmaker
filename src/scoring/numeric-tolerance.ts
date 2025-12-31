@@ -54,27 +54,29 @@ export function scoreNumericTolerance(
   const diff = Math.abs(closest - expectedNumber)
   const relativeDiff = expectedNumber !== 0 ? diff / Math.abs(expectedNumber) : diff
 
-  // Partial credit based on how close the answer is
-  if (relativeDiff < 0.1) {
+  // Continuous scoring based on relative difference
+  // Score decreases smoothly from 1.0 to 0 as error increases
+  // At 25% error, score is 0. Uses exponential decay for smooth curve.
+  if (relativeDiff >= 0.25) {
     return {
-      score: 0.8,
-      confidence: 0.9,
-      notes: `Close match: ${closest} (expected ${expectedNumber}, diff: ${(relativeDiff * 100).toFixed(1)}%)`,
+      score: 0,
+      confidence: 1,
+      notes: `No match: closest was ${closest} (expected ${expectedNumber}, diff: ${(relativeDiff * 100).toFixed(1)}%)`,
     }
   }
 
-  if (relativeDiff < 0.25) {
-    return {
-      score: 0.5,
-      confidence: 0.8,
-      notes: `Partial match: ${closest} (expected ${expectedNumber}, diff: ${(relativeDiff * 100).toFixed(1)}%)`,
-    }
-  }
+  // Continuous score: 1.0 at 0% error, decays to 0 at 25% error
+  // Using formula: score = 1 - (relativeDiff / 0.25)^0.5 for smooth decay
+  // This gives: 0% error = 1.0, 1% = 0.8, 6.25% = 0.5, 25% = 0
+  const score = Math.max(0, 1 - Math.pow(relativeDiff / 0.25, 0.5))
+  
+  // Confidence decreases as the error increases
+  const confidence = Math.max(0.5, 1 - relativeDiff * 2)
 
   return {
-    score: 0,
-    confidence: 1,
-    notes: `No match: closest was ${closest} (expected ${expectedNumber})`,
+    score,
+    confidence,
+    notes: `${score >= 0.99 ? 'Exact' : score >= 0.8 ? 'Close' : 'Partial'} match: ${closest} (expected ${expectedNumber}, diff: ${(relativeDiff * 100).toFixed(1)}%)`,
   }
 }
 

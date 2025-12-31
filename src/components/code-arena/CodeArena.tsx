@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Key, Code2 } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useModelStore } from '@/stores/modelStore'
 import { getOpenRouterClient } from '@/services/openrouter'
@@ -97,15 +98,17 @@ export function CodeArena() {
         <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg">
           {/* Left panel - Configuration */}
           <ResizablePanel defaultSize="25%" minSize="15%" maxSize="40%">
-            <div className="h-full flex flex-col gap-4 pr-2 overflow-auto">
-              <CodeArenaHeader />
-              <div className="flex-1 min-h-0">
-                <ModelSelector useCodeArenaStore={true} />
+            <ScrollArea className="h-full w-full">
+              <div className="flex flex-col gap-4 pr-2 w-full">
+                <CodeArenaHeader />
+                <div className="flex-1 min-h-0">
+                  <ModelSelector useCodeArenaStore={true} />
+                </div>
+                <div className="shrink-0">
+                  <CodeArenaJudgeSelector />
+                </div>
               </div>
-              <div className="shrink-0">
-                <CodeArenaJudgeSelector />
-              </div>
-            </div>
+            </ScrollArea>
           </ResizablePanel>
 
           <ResizableHandle withHandle />
