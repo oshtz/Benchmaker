@@ -82,7 +82,8 @@ export async function scoreCodeArenaOutput(
       }
 
       return {
-        score: 0.5, // Default to 50% if we can't parse
+        score: 0, // Default to 0 if we can't parse - don't inflate scores
+        confidence: 0, // Low confidence since we couldn't parse
         notes: 'Could not parse judge response: ' + content.slice(0, 200),
       }
     }
@@ -119,6 +120,8 @@ Code:
 
 Reply with just a number from 0-100.`
 
+const QUICK_SCORE_CODE_LIMIT = 5000
+
 export async function quickScoreCodeArenaOutput(
   prompt: string,
   code: string,
@@ -132,10 +135,13 @@ export async function quickScoreCodeArenaOutput(
     }
   }
 
+  const wasTruncated = code.length > QUICK_SCORE_CODE_LIMIT
+  const truncatedCode = wasTruncated ? code.slice(0, QUICK_SCORE_CODE_LIMIT) : code
+
   try {
     const judgePrompt = SIMPLE_JUDGE_PROMPT
       .replace('{prompt}', prompt)
-      .replace('{code}', code.slice(0, 5000)) // Limit code length for quick scoring
+      .replace('{code}', truncatedCode)
 
     const response = await client.createChatCompletion({
       model: judgeModelId,
@@ -154,18 +160,23 @@ export async function quickScoreCodeArenaOutput(
 
     if (!scoreMatch) {
       return {
-        score: 0.5,
+        score: 0, // Default to 0 if we can't parse - don't inflate scores
+        confidence: 0,
         notes: 'Could not parse quick score',
       }
     }
 
     const rawScore = Math.min(100, Math.max(0, parseInt(scoreMatch[1], 10)))
+    const truncationWarning = wasTruncated 
+      ? ` (Warning: code truncated from ${code.length} to ${QUICK_SCORE_CODE_LIMIT} chars)` 
+      : ''
 
     return {
       score: rawScore / 100,
       rawScore,
       maxScore: 100,
-      notes: 'Quick evaluation',
+      confidence: wasTruncated ? 0.8 : 1, // Lower confidence when truncated
+      notes: `Quick evaluation${truncationWarning}`,
     }
   } catch (error) {
     console.error('Failed quick score:', error)

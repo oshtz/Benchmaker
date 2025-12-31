@@ -6,6 +6,30 @@ import { extractCodeFromStreamingContent, extractCodeFromResponse } from './code
 import { scoreCodeArenaOutput } from '@/scoring/code-arena-judge'
 import type { ChatMessage, ModelParameters, OpenRouterModel, CodeArenaOutput } from '@/types'
 
+// Per-request timeout in milliseconds (2 minutes)
+const REQUEST_TIMEOUT_MS = 120000
+
+/**
+ * Wraps a promise with a timeout. If the timeout expires, throws an error.
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(errorMessage))
+    }, timeoutMs)
+
+    promise
+      .then((result) => {
+        clearTimeout(timeoutId)
+        resolve(result)
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId)
+        reject(error)
+      })
+  })
+}
+
 function calculateCost(
   usage: StreamResult['usage'],
   model: OpenRouterModel | undefined
@@ -87,9 +111,9 @@ export async function executeCodeArenaRun(
           content: prompt,
         })
 
-        // Stream the response
+        // Stream the response with timeout
         let streamedContent = ''
-        const result = await client.createChatCompletionStreamWithUsage(
+        const streamPromise = client.createChatCompletionStreamWithUsage(
           {
             model: modelId,
             messages,
@@ -114,6 +138,12 @@ export async function executeCodeArenaRun(
               extractedCode,
             })
           }
+        )
+        
+        const result = await withTimeout(
+          streamPromise,
+          REQUEST_TIMEOUT_MS,
+          `Request timed out after ${REQUEST_TIMEOUT_MS / 1000}s`
         )
 
         const latencyMs = Date.now() - startTime

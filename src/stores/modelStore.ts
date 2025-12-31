@@ -26,6 +26,8 @@ interface ModelState {
   // Parameter Actions
   setParameters: (params: Partial<ModelParameters>) => void
   resetParameters: () => void
+  toggleBenchmarkMode: () => void
+  getEffectiveParameters: () => ModelParameters
 
   // Getters
   getSelectedModels: () => OpenRouterModel[]
@@ -36,6 +38,14 @@ const defaultParameters: ModelParameters = {
   temperature: 0.7,
   topP: 1,
   maxTokens: 2048,
+  frequencyPenalty: 0,
+  presencePenalty: 0,
+  benchmarkMode: false,
+}
+
+// Benchmark mode uses temp=0 for reproducibility
+const benchmarkModeParameters: Partial<ModelParameters> = {
+  temperature: 0,
   frequencyPenalty: 0,
   presencePenalty: 0,
 }
@@ -87,6 +97,46 @@ export const useModelStore = create<ModelState>()(
       getJudgeModel: () => {
         const state = get()
         return state.availableModels.find((m) => m.id === state.judgeModelId) || null
+      },
+
+      toggleBenchmarkMode: () => {
+        set((state) => {
+          const newBenchmarkMode = !state.parameters.benchmarkMode
+          if (newBenchmarkMode) {
+            // Enable benchmark mode: apply benchmark parameters
+            return {
+              parameters: {
+                ...state.parameters,
+                ...benchmarkModeParameters,
+                benchmarkMode: true,
+              },
+            }
+          } else {
+            // Disable benchmark mode: restore defaults but keep maxTokens and topP
+            return {
+              parameters: {
+                ...state.parameters,
+                temperature: defaultParameters.temperature,
+                frequencyPenalty: defaultParameters.frequencyPenalty,
+                presencePenalty: defaultParameters.presencePenalty,
+                benchmarkMode: false,
+              },
+            }
+          }
+        })
+      },
+
+      getEffectiveParameters: () => {
+        const state = get()
+        if (state.parameters.benchmarkMode) {
+          return {
+            ...state.parameters,
+            temperature: 0, // Always 0 in benchmark mode
+            frequencyPenalty: 0,
+            presencePenalty: 0,
+          }
+        }
+        return state.parameters
       },
     }),
     {

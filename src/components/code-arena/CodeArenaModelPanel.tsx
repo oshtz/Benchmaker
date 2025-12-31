@@ -143,7 +143,7 @@ export function CodeArenaModelPanel({
         ) : isPreviewMode ? (
           <CodePreviewPanel code={displayCode} className="h-full" />
         ) : (
-          <CodeEditorView code={displayCode} className="h-full" />
+          <CodeEditorView code={displayCode} className="h-full" isStreaming={isLoading} />
         )}
       </CardContent>
 
