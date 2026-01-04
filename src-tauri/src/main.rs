@@ -1038,18 +1038,20 @@ fn chrono_now() -> i64 {
 // Updater
 // ============================================================================
 
+#[cfg(target_os = "windows")]
 fn escape_powershell_literal(value: &str) -> String {
     value.replace('\'', "''")
+}
+
+#[cfg(target_os = "macos")]
+fn escape_bash_literal(value: &str) -> String {
+    value.replace('\'', "'\\''")
 }
 
 #[tauri::command]
 fn apply_update(app: AppHandle, update_path: String) -> Result<(), String> {
     if cfg!(debug_assertions) {
         return Err("Auto-update is disabled in dev builds.".to_string());
-    }
-
-    if !cfg!(target_os = "windows") {
-        return Err("Auto-update is only supported on Windows.".to_string());
     }
 
     let update_file = Path::new(&update_path);
@@ -1060,20 +1062,93 @@ fn apply_update(app: AppHandle, update_path: String) -> Result<(), String> {
     let current_exe = std::env::current_exe().map_err(|err| err.to_string())?;
     let pid = std::process::id();
 
-    let script = format!(
-        "$procId = {pid}; $source = '{source}'; $target = '{target}'; while (Get-Process -Id $procId -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 200 }}; Move-Item -Force $source $target; Start-Process $target",
-        pid = pid,
-        source = escape_powershell_literal(&update_file.to_string_lossy()),
-        target = escape_powershell_literal(&current_exe.to_string_lossy()),
-    );
+    #[cfg(target_os = "windows")]
+    {
+        let script = format!(
+            "$procId = {pid}; $source = '{source}'; $target = '{target}'; while (Get-Process -Id $procId -ErrorAction SilentlyContinue) {{ Start-Sleep -Milliseconds 200 }}; Move-Item -Force $source $target; Start-Process $target",
+            pid = pid,
+            source = escape_powershell_literal(&update_file.to_string_lossy()),
+            target = escape_powershell_literal(&current_exe.to_string_lossy()),
+        );
 
-    Command::new("powershell")
-        .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &script])
-        .spawn()
-        .map_err(|err| err.to_string())?;
+        Command::new("powershell")
+            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &script])
+            .spawn()
+            .map_err(|err| err.to_string())?;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        // Get the .app bundle path (current_exe is inside .app/Contents/MacOS/)
+        let app_bundle = current_exe
+            .parent()  // MacOS/
+            .and_then(|p| p.parent())  // Contents/
+            .and_then(|p| p.parent())  // .app bundle
+            .ok_or("Could not determine app bundle path")?;
+
+        let script = format!(
+            r#"
+            pid={}
+            source='{}'
+            target='{}'
+            
+            while kill -0 $pid 2>/dev/null; do sleep 0.2; done
+            rm -rf "$target"
+            mv -f "$source" "$target"
+            open "$target"
+            "#,
+            pid,
+            escape_bash_literal(&update_file.to_string_lossy()),
+            escape_bash_literal(&app_bundle.to_string_lossy()),
+        );
+
+        Command::new("bash")
+            .args(["-c", &script])
+            .spawn()
+            .map_err(|err| err.to_string())?;
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        return Err("Auto-update is not supported on this platform.".to_string());
+    }
 
     app.exit(0);
     Ok(())
+}
+
+#[cfg(target_os = "macos")]
+#[tauri::command]
+fn extract_app_zip(zip_path: String) -> Result<String, String> {
+    let zip_file = Path::new(&zip_path);
+    let parent = zip_file.parent().ok_or("Invalid zip path")?;
+
+    // Use ditto to extract (preserves macOS attributes and code signatures)
+    let status = Command::new("ditto")
+        .args(["-xk", &zip_path, &parent.to_string_lossy().to_string()])
+        .status()
+        .map_err(|e| e.to_string())?;
+
+    if !status.success() {
+        return Err("Failed to extract update".to_string());
+    }
+
+    // Return path to extracted .app
+    let app_path = parent.join("Benchmaker.app");
+    if !app_path.exists() {
+        return Err("Extracted app not found".to_string());
+    }
+
+    // Clean up zip file
+    std::fs::remove_file(zip_file).ok();
+
+    Ok(app_path.to_string_lossy().to_string())
+}
+
+#[cfg(not(target_os = "macos"))]
+#[tauri::command]
+fn extract_app_zip(_zip_path: String) -> Result<String, String> {
+    Err("This command is only available on macOS".to_string())
 }
 
 // ============================================================================
@@ -1095,7 +1170,9 @@ fn main() {
             delete_run,
             get_app_state,
             save_app_state,
+            // Updater commands
             apply_update,
+            extract_app_zip,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

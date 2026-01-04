@@ -18,8 +18,23 @@ export type UpdateInfo = {
 }
 
 const GITHUB_REPO = 'oshtz/Benchmaker'
-const RELEASE_ASSET_NAME = 'Benchmaker-Portable.exe'
 const UPDATE_DIR_NAME = 'benchmaker-updates'
+
+type AssetConfig = {
+  name: string
+  extension: string
+}
+
+async function getAssetConfig(): Promise<AssetConfig> {
+  const { platform } = await import('@tauri-apps/api/os')
+  const os = await platform()
+
+  if (os === 'darwin') {
+    return { name: 'Benchmaker.app.zip', extension: '.app.zip' }
+  }
+  // Default to Windows
+  return { name: 'Benchmaker-Portable.exe', extension: '.exe' }
+}
 
 function isTauriRuntime(): boolean {
   return typeof window !== 'undefined' && '__TAURI__' in window
@@ -112,13 +127,17 @@ export async function checkForUpdate(): Promise<UpdateInfo | null> {
     return null
   }
 
+  // Find platform-specific asset
+  const assetConfig = await getAssetConfig()
   const assets = release.assets ?? []
   const asset =
-    assets.find((entry) => entry.name === RELEASE_ASSET_NAME) ??
-    assets.find((entry) => entry.browser_download_url.toLowerCase().endsWith('.exe'))
+    assets.find((entry) => entry.name === assetConfig.name) ??
+    assets.find((entry) =>
+      entry.browser_download_url.toLowerCase().endsWith(assetConfig.extension)
+    )
 
   if (!asset) {
-    throw new Error('No compatible update asset found in the latest release.')
+    throw new Error('No compatible update asset found for this platform.')
   }
 
   return {
@@ -137,17 +156,31 @@ export async function downloadUpdate(update: UpdateInfo): Promise<string> {
   const binary = await downloadBinary(update.downloadUrl)
   const { appLocalDataDir, join } = await import('@tauri-apps/api/path')
   const { createDir, writeBinaryFile, BaseDirectory } = await import('@tauri-apps/api/fs')
+  const { platform } = await import('@tauri-apps/api/os')
+  const os = await platform()
 
-  const updateDir = UPDATE_DIR_NAME
-  await createDir(updateDir, { dir: BaseDirectory.AppLocalData, recursive: true })
+  await createDir(UPDATE_DIR_NAME, { dir: BaseDirectory.AppLocalData, recursive: true })
 
-  const fileName = `Benchmaker-${update.version}.exe`
-  const updatePath = await join(await appLocalDataDir(), updateDir, fileName)
+  // Platform-specific filename
+  const fileName =
+    os === 'darwin'
+      ? `Benchmaker-${update.version}.app.zip`
+      : `Benchmaker-${update.version}.exe`
+
+  const updatePath = await join(await appLocalDataDir(), UPDATE_DIR_NAME, fileName)
 
   await writeBinaryFile(
-    { path: `${updateDir}/${fileName}`, contents: binary },
+    { path: `${UPDATE_DIR_NAME}/${fileName}`, contents: binary },
     { dir: BaseDirectory.AppLocalData }
   )
+
+  // On macOS, extract the .app from the zip
+  if (os === 'darwin') {
+    const { invoke } = await import('@tauri-apps/api/tauri')
+    const extractedPath = await invoke<string>('extract_app_zip', { zipPath: updatePath })
+    return extractedPath
+  }
+
   return updatePath
 }
 
