@@ -104,14 +104,14 @@ export function CodeEditorView({
 
   if (!code) {
     return (
-      <div className={`flex items-center justify-center bg-muted/30 rounded-lg ${className}`}>
+      <div className={`flex items-center justify-center bg-muted/30 rounded-xl ${className}`}>
         <p className="text-sm text-muted-foreground">No code generated yet</p>
       </div>
     )
   }
 
   return (
-    <div className={`relative bg-[#1e1e1e] rounded-lg overflow-hidden ${className}`}>
+    <div className={`relative bg-[#1e1e1e] rounded-xl overflow-hidden ${className}`}>
       {/* Copy button */}
       <Button
         variant="ghost"

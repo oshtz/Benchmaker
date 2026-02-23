@@ -38,7 +38,7 @@ export function CodePreviewPanel({ code, className = '' }: CodePreviewPanelProps
 
   if (!code) {
     return (
-      <div className={`flex items-center justify-center bg-muted/30 rounded-lg ${className}`}>
+      <div className={`flex items-center justify-center bg-muted/30 rounded-xl ${className}`}>
         <p className="text-sm text-muted-foreground">No code to preview</p>
       </div>
     )
@@ -46,7 +46,7 @@ export function CodePreviewPanel({ code, className = '' }: CodePreviewPanelProps
 
   if (error) {
     return (
-      <div className={`flex flex-col items-center justify-center gap-2 bg-destructive/10 rounded-lg p-4 ${className}`}>
+      <div className={`flex flex-col items-center justify-center gap-2 bg-destructive/10 rounded-xl p-4 ${className}`}>
         <AlertCircle className="h-8 w-8 text-destructive" />
         <p className="text-sm text-destructive">{error}</p>
         <Button variant="outline" size="sm" onClick={handleRefresh}>
@@ -58,7 +58,7 @@ export function CodePreviewPanel({ code, className = '' }: CodePreviewPanelProps
   }
 
   return (
-    <div className={`relative bg-white rounded-lg overflow-hidden ${className}`}>
+    <div className={`relative bg-white rounded-xl overflow-hidden ${className}`}>
       {/* Refresh button */}
       <Button
         variant="ghost"

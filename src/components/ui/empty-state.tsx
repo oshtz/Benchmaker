@@ -38,7 +38,7 @@ export function EmptyState({
     <Card className={cn('max-w-2xl mx-auto relative overflow-hidden', className)}>
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
       <CardHeader className="text-center pb-2 space-y-3">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10 shadow-sm">
           <Icon className={cn('h-8 w-8', iconColors[variant])} />
         </div>
         <div className="space-y-1">
@@ -62,7 +62,7 @@ export function EmptyState({
               >
                 <div
                   className={cn(
-                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-semibold',
                     step.completed
                       ? 'bg-emerald-500 text-white'
                       : 'bg-primary text-primary-foreground'

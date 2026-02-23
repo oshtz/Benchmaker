@@ -40,7 +40,7 @@ export function JudgeSelector() {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <Gavel className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
           </div>
           <div className="min-w-0">

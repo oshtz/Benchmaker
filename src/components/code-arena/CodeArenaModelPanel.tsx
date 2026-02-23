@@ -1,4 +1,4 @@
-import { Loader2, AlertCircle, Clock, DollarSign, Code, Eye } from 'lucide-react'
+import { AlertCircle, Clock, DollarSign, Code, Eye } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -29,9 +29,9 @@ export function CodeArenaModelPanel({
     switch (output.status) {
       case 'running':
         return (
-          <Badge variant="default" className="bg-blue-500">
-            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-            Generating
+          <Badge variant="outline" className="border-primary text-primary">
+            <span className="decoding-text">
+            RUNNING</span>
           </Badge>
         )
       case 'completed':
@@ -132,7 +132,7 @@ export function CodeArenaModelPanel({
           </div>
         ) : isLoading && !displayCode ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 p-4">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <span className="decoding-text text-primary font-bold">RUNNING</span>
             <p className="text-sm text-muted-foreground">Generating code...</p>
             {output?.streamedContent && (
               <p className="text-xs text-muted-foreground">

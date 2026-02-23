@@ -3,6 +3,7 @@ import { History, Trash2, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Select,
   SelectContent,
@@ -69,7 +70,7 @@ export function Results() {
 
   return (
     <div className="h-full min-h-0 flex flex-col gap-6">
-      <div className="surface-strong rounded-3xl p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between shrink-0">
+      <div className="surface shadow-sm border-border/40 p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between shrink-0">
         <div>
           <h2 className="headline">Results</h2>
           <p className="text-sm text-muted-foreground">
@@ -110,17 +111,30 @@ export function Results() {
       </div>
 
       {currentRun && (
-        <div className="flex-1 min-h-0 flex flex-col gap-6">
-          <div className="shrink-0">
-            <ReportSummary run={currentRun} />
+        <Tabs defaultValue="grid" className="flex-1 min-h-0 flex flex-col gap-0">
+          <div className="shrink-0 bg-muted/40 backdrop-blur-md border-b border-border/40 px-4 py-2 flex items-center gap-4">
+            <span className="text-sm font-bold uppercase tracking-widest text-muted-foreground">View:</span>
+            <TabsList className="bg-transparent border-none p-0 h-auto">
+              <TabsTrigger value="grid" className="data-[state=active]:bg-foreground data-[state=active]:text-background rounded-lg border border-transparent data-[state=active]:border-foreground uppercase font-bold text-xs tracking-wider px-4 py-1.5">Comparison Grid</TabsTrigger>
+              <TabsTrigger value="summary" className="data-[state=active]:bg-foreground data-[state=active]:text-background rounded-lg border border-transparent data-[state=active]:border-foreground uppercase font-bold text-xs tracking-wider px-4 py-1.5">Summary & Analysis</TabsTrigger>
+            </TabsList>
           </div>
-          <div className="shrink-0">
-            <MultiRunAnalysis currentRun={currentRun} />
-          </div>
-          <div className="flex-1 min-h-0">
+
+          <TabsContent value="summary" className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 mt-0">
+            <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+              <div className="shrink-0">
+                <ReportSummary run={currentRun} />
+              </div>
+              <div className="shrink-0">
+                <MultiRunAnalysis currentRun={currentRun} />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="grid" className="flex-1 min-h-0 m-0">
             <ComparisonGrid run={currentRun} />
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       )}
 
       <ConfirmDialog

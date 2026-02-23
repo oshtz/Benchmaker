@@ -80,7 +80,7 @@ export function CodeArena() {
   return (
     <div className="h-full min-h-0 flex flex-col">
       {/* Header section */}
-      <div className="surface-strong rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between shrink-0 mb-4">
+      <div className="surface border-b-0 p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between shrink-0 mb-4">
         <div className="min-w-0 flex items-center gap-3">
           <Code2 className="h-6 w-6 text-primary shrink-0" />
           <div>
@@ -95,7 +95,7 @@ export function CodeArena() {
 
       {/* Main content with resizable panels */}
       <div className="flex-1 min-h-0">
-        <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg">
+        <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl">
           {/* Left panel - Configuration */}
           <ResizablePanel defaultSize="25%" minSize="15%" maxSize="40%">
             <ScrollArea className="h-full w-full">
