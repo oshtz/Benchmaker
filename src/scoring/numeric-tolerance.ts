@@ -5,6 +5,19 @@ export function scoreNumericTolerance(
   expected: string,
   tolerance: number = 0.01
 ): ScoringResult {
+  const result = _scoreNumericTolerance(response, expected, tolerance)
+  return {
+    ...result,
+    rawScore: Math.round(result.score * 100),
+    maxScore: 100,
+  }
+}
+
+function _scoreNumericTolerance(
+  response: string,
+  expected: string,
+  tolerance: number = 0.01
+): ScoringResult {
   if (!expected) {
     return {
       score: 1,

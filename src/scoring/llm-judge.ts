@@ -4,21 +4,21 @@ import type { OpenRouterClient } from '@/services/openrouter'
 const BASE_JUDGE_SYSTEM_PROMPT = `You are an expert evaluator assessing the quality of AI model responses. Your task is to score responses objectively based on accuracy, completeness, and adherence to the task requirements.
 
 SCORING GUIDELINES:
-- Score from 0 to 10, where:
-  - 10: Perfect response, fully correct and complete
-  - 8-9: Excellent response with minor issues
-  - 6-7: Good response but missing some elements or has small errors
-  - 4-5: Partially correct but significant issues
-  - 2-3: Mostly incorrect but shows some understanding
-  - 0-1: Completely wrong or irrelevant
+- Score from 0 to 100, where:
+  - 100: Perfect response, fully correct and complete
+  - 80-99: Excellent response with minor issues
+  - 60-79: Good response but missing some elements or has small errors
+  - 40-59: Partially correct but significant issues
+  - 20-39: Mostly incorrect but shows some understanding
+  - 0-19: Completely wrong or irrelevant
 
 RESPONSE FORMAT:
 You MUST respond with a JSON object containing:
-- "score": A number from 0 to 10
+- "score": A number from 0 to 100
 - "reasoning": A brief explanation of your scoring decision
 
 Example response:
-{"score": 8, "reasoning": "The response correctly identifies the main concept but lacks one minor detail."}
+{"score": 85, "reasoning": "The response correctly identifies the main concept but lacks one minor detail."}
 
 If additional benchmark instructions specify a different output format, follow that format exactly.`
 
@@ -37,7 +37,7 @@ export async function scoreLLMJudge(
         confidence: 1,
         notes: 'Empty response',
         rawScore: 0,
-        maxScore: 10,
+        maxScore: 100,
       }
     }
 
@@ -98,7 +98,7 @@ ${expectedOutput}
 
   prompt += `
 ## Your Task
-Evaluate the model's response and provide a score from 0-10 with reasoning.
+Evaluate the model's response and provide a score from 0-100 with reasoning.
 Respond ONLY with a valid JSON object.`
 
   return prompt
@@ -172,10 +172,10 @@ function parseStructuredJudgeResponse(response: string): ScoringResult | null {
     /constraint\s+satisfaction\s*:\s*\[?\s*(yes|no)\s*\]?/i
   )
   const semanticMatch = response.match(
-    /semantic\s+score\s*:\s*\[?\s*(\d+(?:\.\d+)?)\s*(?:\/\s*10)?\s*\]?/i
+    /semantic\s+score\s*:\s*\[?\s*(\d+(?:\.\d+)?)\s*(?:\/\s*(10|100))?\s*\]?/i
   )
   const personaMatch = response.match(
-    /persona\s+score\s*:\s*\[?\s*(\d+(?:\.\d+)?)\s*(?:\/\s*10)?\s*\]?/i
+    /persona\s+score\s*:\s*\[?\s*(\d+(?:\.\d+)?)\s*(?:\/\s*(10|100))?\s*\]?/i
   )
   const reasoningMatch = response.match(
     /final\s+rational(?:e)?\s*:\s*([^\n\r]+)/i
@@ -186,13 +186,21 @@ function parseStructuredJudgeResponse(response: string): ScoringResult | null {
   }
 
   const constraintSatisfied = constraintMatch[1].toLowerCase() === 'yes'
-  const semanticScore = clampScore(parseFloat(semanticMatch[1]))
-  const personaScore = clampScore(parseFloat(personaMatch[1]))
+  
+  let semanticScore = parseFloat(semanticMatch[1])
+  if (semanticMatch[2] === '10' || semanticScore <= 10) semanticScore *= 10
+  
+  let personaScore = parseFloat(personaMatch[1])
+  if (personaMatch[2] === '10' || personaScore <= 10) personaScore *= 10
+  
+  semanticScore = clampScore(semanticScore)
+  personaScore = clampScore(personaScore)
+  
   const averageScore = (semanticScore + personaScore) / 2
   const finalScore = constraintSatisfied ? averageScore : 0
 
   return {
-    score: Math.min(Math.max(finalScore / 10, 0), 1),
+    score: Math.min(Math.max(finalScore / 100, 0), 1),
     confidence: 0.85,
     notes: buildStructuredNotes(
       constraintSatisfied,
@@ -201,13 +209,13 @@ function parseStructuredJudgeResponse(response: string): ScoringResult | null {
       reasoningMatch?.[1]
     ),
     rawScore: finalScore,
-    maxScore: 10,
+    maxScore: 100,
   }
 }
 
 function clampScore(score: number): number {
   if (Number.isNaN(score)) return 0
-  return Math.min(Math.max(score, 0), 10)
+  return Math.min(Math.max(score, 0), 100)
 }
 
 function extractJsonCandidate(response: string): string | null {
@@ -273,20 +281,25 @@ function extractScoreFromText(
   response: string
 ): { score: number; reasoning?: string } | null {
   const scoreMatch = response.match(
-    /(?:score|rating)\s*[:=\-]?\s*(\d+(?:\.\d+)?)(?:\s*\/\s*10)?/i
+    /(?:score|rating)[\s*"':=\-]*(\d+(?:\.\d+)?)(?:\s*\/\s*(10|100))?/i
   )
   const fallbackMatch = response.match(
-    /^\s*(\d+(?:\.\d+)?)(?:\s*\/\s*10)?\s*$/i
+    /^\s*(\d+(?:\.\d+)?)(?:\s*\/\s*(10|100))?\s*$/i
   )
   const match = scoreMatch ?? fallbackMatch
 
   if (!match) return null
 
-  const score = parseFloat(match[1])
+  let score = parseFloat(match[1])
   if (Number.isNaN(score)) return null
 
+  // Implicitly scale 10-point scores up to 100
+  if (match[2] === '10' || score <= 10) {
+    score *= 10
+  }
+
   const reasoningMatch = response.match(
-    /(?:reasoning|rationale|explanation)\s*[:=\-]?\s*([^\n\r]+)/i
+    /(?:reasoning|rationale|explanation)[\s*"':=\-]*([^\n\r]+)/i
   )
 
   return {
@@ -300,29 +313,36 @@ function normalizeParsedJudgeScore(
 ): ScoringResult | null {
   if (!parsed) return null
 
-  const scoreValue = normalizeScoreValue(parsed.score)
+  const scoreKey = Object.keys(parsed).find(k => /^(?:score|rating)$/i.test(k))
+  if (!scoreKey) return null
+
+  const scoreValue = normalizeScoreValue(parsed[scoreKey])
   if (scoreValue === null) {
     return null
   }
 
-  const rawScore = clampScore(scoreValue)
+  let rawScore = clampScore(scoreValue)
+  
+  // If the parsed JSON explicitly returned a score <= 10 (likely using the old prompt structure implicitly), scale it.
+  if (rawScore <= 10) {
+    rawScore *= 10
+  }
+  
   const reasoning = extractReasoning(parsed)
 
   return {
-    score: Math.min(Math.max(rawScore / 10, 0), 1),
+    score: Math.min(Math.max(rawScore / 100, 0), 1),
     confidence: 0.9,
     notes: reasoning || 'Judge evaluation complete',
     rawScore,
-    maxScore: 10,
+    maxScore: 100,
   }
 }
 
 function extractReasoning(parsed: Record<string, unknown>): string | undefined {
-  const candidates = [parsed.reasoning, parsed.rationale, parsed.explanation]
-  for (const value of candidates) {
-    if (typeof value === 'string' && value.trim()) {
-      return value.trim()
-    }
+  const key = Object.keys(parsed).find(k => /^(?:reasoning|rationale|explanation|notes|reason)$/i.test(k))
+  if (key && typeof parsed[key] === 'string' && parsed[key].trim()) {
+    return parsed[key].trim()
   }
   return undefined
 }
@@ -333,14 +353,14 @@ function buildScoreResult(
   confidence: number
 ): ScoringResult {
   const clamped = clampScore(rawScore)
-  const normalizedScore = Math.min(Math.max(clamped / 10, 0), 1)
+  const normalizedScore = Math.min(Math.max(clamped / 100, 0), 1)
 
   return {
     score: normalizedScore,
     confidence,
-    notes: reasoning || `Extracted score from text: ${clamped}/10`,
+    notes: reasoning || `Extracted score from text: ${clamped}/100`,
     rawScore: clamped,
-    maxScore: 10,
+    maxScore: 100,
   }
 }
 
@@ -352,8 +372,8 @@ function buildStructuredNotes(
 ): string {
   const parts = [
     `Constraint: ${constraintSatisfied ? 'Yes' : 'No'}`,
-    `Semantic: ${semanticScore}/10`,
-    `Persona: ${personaScore}/10`,
+    `Semantic: ${semanticScore}/100`,
+    `Persona: ${personaScore}/100`,
   ]
 
   if (reasoning && reasoning.trim()) {

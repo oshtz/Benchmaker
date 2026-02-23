@@ -65,8 +65,8 @@ export async function scoreCodeArenaOutput(
     const content = response.choices[0]?.message?.content || ''
     
     // Parse the response
-    const scoreMatch = content.match(/SCORE:\s*(\d+)/i)
-    const explanationMatch = content.match(/EXPLANATION:\s*(.+)/is)
+    const scoreMatch = content.match(/SCORE[\s*"':=\-]*(\d+)/i)
+    const explanationMatch = content.match(/EXPLANATION[\s*"':=\-]*(.+)/is)
 
     if (!scoreMatch) {
       // Try to find any number in the response as a fallback
@@ -91,7 +91,7 @@ export async function scoreCodeArenaOutput(
     const rawScore = Math.min(100, Math.max(0, parseInt(scoreMatch[1], 10)))
     const explanation = explanationMatch 
       ? explanationMatch[1].trim() 
-      : content.replace(/SCORE:\s*\d+/i, '').trim()
+      : content.replace(/SCORE[\s*"':=\-]*\d+/i, '').trim()
 
     return {
       score: rawScore / 100,
