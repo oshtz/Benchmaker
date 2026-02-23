@@ -247,7 +247,7 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           RUST_LOG: tauri_bundler=debug
           RUST_BACKTRACE: 1
-        run: npm run tauri:build -- --bundles dmg
+        run: npm run tauri:build -- --bundles app,dmg
 
       - name: Upload dmg
         uses: actions/upload-artifact@v4
