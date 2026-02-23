@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, AlertCircle, Clock, Loader2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, AlertCircle, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { TestCaseResult } from '@/types'
@@ -23,11 +23,11 @@ export function ResponseCell({ result }: ResponseCellProps) {
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Generating...
+          <span className="decoding-text text-primary text-xs uppercase font-bold tracking-widest">AWAITING_TELEMETRY</span>
+          
         </div>
         {result.streamedContent && (
-          <div className="text-sm bg-background/70 border border-border/60 p-2 rounded-lg max-h-32 overflow-y-auto">
+          <div className="text-xs bg-black text-primary font-mono border border-border p-2 rounded-lg max-h-32 overflow-y-auto">
             {result.streamedContent}
           </div>
         )}
@@ -74,7 +74,7 @@ export function ResponseCell({ result }: ResponseCellProps) {
 
       {/* Response */}
       <div
-        className={`text-sm bg-background/70 border border-border/60 p-2 rounded-lg overflow-hidden ${
+        className={`text-xs bg-black text-primary font-mono border border-border p-2 rounded-lg overflow-hidden ${
           !expanded && isLong ? 'max-h-24' : ''
         }`}
       >

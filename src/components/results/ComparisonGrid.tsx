@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { useTestSuiteStore } from '@/stores/testSuiteStore'
@@ -132,11 +131,11 @@ export function ComparisonGrid({ run }: ComparisonGridProps) {
 
   if (!testSuite) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">
+      <div>
+        <div className="py-8 text-center text-muted-foreground">
           Test suite not found
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     )
   }
 
@@ -185,11 +184,8 @@ export function ComparisonGrid({ run }: ComparisonGridProps) {
   )
 
   return (
-    <Card className="overflow-hidden flex flex-col h-full min-h-0">
-      <CardHeader className="pb-2 sm:pb-4 shrink-0">
-        <CardTitle className="text-base sm:text-lg md:text-xl">Comparison Grid</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0 flex-1 min-h-0" ref={containerRef}>
+    <div className="overflow-hidden flex flex-col h-full min-h-0">
+      <div className="p-0 flex-1 min-h-0" ref={containerRef}>
         <ScrollArea className="h-full w-full">
           <div className="min-w-max">
             {/* Header Row */}
@@ -251,13 +247,13 @@ export function ComparisonGrid({ run }: ComparisonGridProps) {
                           style={{ width: getColumnWidth(idx + 1) }}
                         >
                           {result?.status === 'running' ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="decoding-text text-[10px] text-primary uppercase font-bold tracking-widest">RUNNING</span>
                           ) : result?.status === 'failed' ? (
                             <Badge variant="destructive">Failed</Badge>
                           ) : result?.score ? (
                             <div className="flex items-center gap-2">
                               <div
-                                className={`w-3 h-3 rounded-full ${getScoreColor(
+                                className={`w-2 h-2 rounded-full ${getScoreColor(
                                   result.score.score
                                 )}`}
                               />
@@ -336,7 +332,7 @@ export function ComparisonGrid({ run }: ComparisonGridProps) {
             })}
           </div>
         </ScrollArea>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

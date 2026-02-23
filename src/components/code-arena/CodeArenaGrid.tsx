@@ -16,7 +16,7 @@ export function CodeArenaGrid() {
 
   if (selectedModelIds.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+      <div className="flex items-center justify-center h-full text-muted-foreground bg-muted/20 rounded-xl border border-dashed">
         <p>Select models to compare</p>
       </div>
     )

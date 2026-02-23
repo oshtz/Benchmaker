@@ -19,11 +19,11 @@ const tabs = [
 
 export function MainTabsList({ className }: { className?: string }) {
   return (
-    <TabsList className={cn("inline-flex gap-0.5 bg-muted/60", className)}>
+    <TabsList className={cn("inline-flex gap-2 bg-black/10 dark:bg-black/30 border border-border/40 p-2 px-3 sm:px-4 rounded-2xl backdrop-blur-xl shadow-inner overflow-x-auto max-w-full scrollbar-hidden", className)}>
       {tabs.map(({ value, label, Icon }) => (
-        <TabsTrigger key={value} value={value} className="flex items-center gap-1.5 px-3">
-          <Icon className="h-4 w-4 shrink-0" />
-          <span className="hidden sm:inline text-sm">{label}</span>
+        <TabsTrigger key={value} value={value} className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 text-muted-foreground hover:text-foreground data-[state=active]:bg-background/60 data-[state=active]:text-foreground data-[state=active]:shadow-sm whitespace-nowrap shrink-0">
+          <Icon className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-data-[state=active]:text-primary" />
+          <span className="hidden sm:inline font-semibold">{label}</span>
         </TabsTrigger>
       ))}
     </TabsList>
@@ -33,37 +33,37 @@ export function MainTabsList({ className }: { className?: string }) {
 export function MainTabs() {
   return (
     <>
-      <TabsContent value="prompts" className="mt-0 pt-6 flex-1 min-h-0 animate-fade-up">
+      <TabsContent value="prompts" className="mt-0 pt-4 flex-1 min-h-0 animate-fade-up">
         <div className="w-full h-full min-h-0">
           <PromptManager />
         </div>
       </TabsContent>
 
-      <TabsContent value="arena" className="mt-0 pt-6 flex-1 min-h-0 animate-fade-up">
+      <TabsContent value="arena" className="mt-0 pt-4 flex-1 min-h-0 animate-fade-up">
         <div className="w-full h-full min-h-0">
           <Arena />
         </div>
       </TabsContent>
 
-      <TabsContent value="code-arena" className="mt-0 pt-6 flex-1 min-h-0 animate-fade-up">
+      <TabsContent value="code-arena" className="mt-0 pt-4 flex-1 min-h-0 animate-fade-up">
         <div className="w-full h-full min-h-0">
           <CodeArena />
         </div>
       </TabsContent>
 
-      <TabsContent value="results" className="mt-0 pt-6 flex-1 min-h-0 animate-fade-up">
+      <TabsContent value="results" className="mt-0 pt-4 flex-1 min-h-0 animate-fade-up">
         <div className="w-full h-full min-h-0">
           <Results />
         </div>
       </TabsContent>
 
-      <TabsContent value="analytics" className="mt-0 pt-6 flex-1 min-h-0 animate-fade-up">
+      <TabsContent value="analytics" className="mt-0 pt-4 flex-1 min-h-0 animate-fade-up">
         <div className="w-full h-full min-h-0">
           <Analytics />
         </div>
       </TabsContent>
 
-      <TabsContent value="data" className="mt-0 pt-6 flex-1 min-h-0 animate-fade-up">
+      <TabsContent value="data" className="mt-0 pt-4 flex-1 min-h-0 animate-fade-up">
         <div className="w-full h-full min-h-0">
           <DataManager />
         </div>

@@ -267,9 +267,25 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
 
+      - name: Create app.zip for auto-update
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd src-tauri/target/release/bundle/macos
+          # Use ditto to create zip (preserves code signature and attributes)
+          ditto -c -k --keepParent "Benchmaker.app" "Benchmaker.app.zip"
+          ls -la
+          echo "Created Benchmaker.app.zip for auto-update"
+
       - name: Upload dmg to GitHub release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_tag.outputs.tag }}
           files: src-tauri/target/release/bundle/dmg/*.dmg
+
+      - name: Upload app.zip to GitHub release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          files: src-tauri/target/release/bundle/macos/Benchmaker.app.zip

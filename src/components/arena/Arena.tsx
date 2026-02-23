@@ -136,7 +136,7 @@ export function Arena() {
 
   return (
     <div className="h-full min-h-0 flex flex-col gap-4 sm:gap-6">
-      <div className="surface-strong rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between shrink-0">
+      <div className="surface border-b-0 p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between shrink-0">
         <div className="min-w-0">
           <h2 className="headline">Arena</h2>
           <p className="text-xs sm:text-sm text-muted-foreground truncate">

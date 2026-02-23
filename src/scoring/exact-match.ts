@@ -1,6 +1,15 @@
 import type { ScoringResult } from '@/types'
 
 export function scoreExactMatch(response: string, expected: string): ScoringResult {
+  const result = _scoreExactMatch(response, expected)
+  return {
+    ...result,
+    rawScore: Math.round(result.score * 100),
+    maxScore: 100,
+  }
+}
+
+function _scoreExactMatch(response: string, expected: string): ScoringResult {
   if (!expected) {
     return {
       score: 1,

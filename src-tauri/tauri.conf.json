@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "Benchmaker",
-    "version": "0.1.2"
+    "version": "0.1.4"
   },
   "tauri": {
     "allowlist": {
@@ -38,11 +38,7 @@
         "all": false,
         "writeFile": true,
         "createDir": true,
-        "scope": [
-          "$APPLOCALDATA",
-          "$APPLOCALDATA/**",
-          "$APPLOCALDATA/*"
-        ]
+        "scope": ["$APPLOCALDATA", "$APPLOCALDATA/**", "$APPLOCALDATA/*"]
       }
     },
     "windows": [
@@ -60,11 +56,7 @@
       "active": true,
       "targets": "all",
       "identifier": "com.benchmaker.app",
-      "icon": [
-        "icons/icon.png",
-        "icons/icon.ico",
-        "icons/icon.icns"
-      ]
+      "icon": ["icons/icon.png", "icons/icon.ico", "icons/icon.icns"]
     }
   }
 }

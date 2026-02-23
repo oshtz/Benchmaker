@@ -128,11 +128,12 @@ export function ExecutionControls({ testSuite }: ExecutionControlsProps) {
           Stop {totalRuns > 1 ? `(${currentRunIndex}/${totalRuns})` : ''}
         </Button>
       ) : (
-        <div className="flex items-center">
+        <div className="flex items-center bg-brand-gradient rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 transition-all hover:-translate-y-[1px]">
           <Button 
+            variant="ghost"
             onClick={() => handleRun(1)} 
             disabled={!canRun}
-            className="rounded-r-none"
+            className="rounded-r-none hover:bg-white/10 hover:text-white text-white border-0"
           >
             <Play className="h-4 w-4 mr-2" />
             Run Benchmark
@@ -140,9 +141,9 @@ export function ExecutionControls({ testSuite }: ExecutionControlsProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
-                variant="default" 
+                variant="ghost"
                 disabled={!canRun}
-                className="rounded-l-none border-l border-primary-foreground/20 px-2"
+                className="rounded-l-none hover:bg-white/10 hover:text-white text-white border-0 border-l border-white/20 px-2"
               >
                 <ChevronDown className="h-4 w-4" />
               </Button>

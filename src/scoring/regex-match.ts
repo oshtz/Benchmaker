@@ -1,6 +1,15 @@
 import type { ScoringResult } from '@/types'
 
 export function scoreRegexMatch(response: string, pattern: string): ScoringResult {
+  const result = _scoreRegexMatch(response, pattern)
+  return {
+    ...result,
+    rawScore: Math.round(result.score * 100),
+    maxScore: 100,
+  }
+}
+
+function _scoreRegexMatch(response: string, pattern: string): ScoringResult {
   if (!pattern) {
     return {
       score: 1,

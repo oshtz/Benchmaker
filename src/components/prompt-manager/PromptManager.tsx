@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Plus, FolderOpen, Wand2 } from 'lucide-react'
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
+import { Plus, FolderOpen, Wand2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,11 +42,12 @@ export function PromptManager() {
 
   if (testSuites.length === 0) {
     return (
-      <>
+      <div className="flex items-center justify-center h-full">
         <EmptyState
-          icon={FolderOpen}
+          icon={Sparkles}
           title="Build your first benchmark suite"
           description="Define prompts, constraints, and evaluation rules to compare models."
+          className="shadow-2xl shadow-primary/5 border-primary/10"
           steps={[
             {
               number: 1,
@@ -64,56 +66,58 @@ export function PromptManager() {
             },
           ]}
           action={
-            <div className="flex flex-col sm:flex-row gap-3 items-center">
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
               <BenchmarkGeneratorDialog
                 trigger={
-                  <Button size="lg" disabled={!apiKey}>
-                    <Wand2 className="h-4 w-4 mr-2" />
+                  <Button size="lg" disabled={!apiKey} className="gap-2">
+                    <Wand2 className="h-4 w-4" />
                     Generate with AI
                   </Button>
                 }
               />
-              <span className="text-muted-foreground text-sm">or</span>
+              <span className="text-muted-foreground text-sm font-medium">or</span>
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button size="lg" variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
+                  <Button size="lg" variant="outline" className="gap-2">
+                    <Plus className="h-4 w-4" />
                     Create manually
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="rounded-xl border-border/40 bg-background/95 backdrop-blur-xl">
                   <DialogHeader>
-                    <DialogTitle>Create Test Suite</DialogTitle>
+                    <DialogTitle className="text-gradient">Create Test Suite</DialogTitle>
                     <DialogDescription>
                       A test suite contains a system prompt and multiple test cases
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
+                  <div className="space-y-4 py-2">
                     <div className="space-y-2">
-                      <Label htmlFor="suite-name">Name</Label>
+                      <Label htmlFor="suite-name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</Label>
                       <Input
                         id="suite-name"
                         placeholder="e.g., Logic Puzzles Benchmark"
                         value={newSuiteName}
                         onChange={(e) => setNewSuiteName(e.target.value)}
+                        className="bg-background/50"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="suite-description">Description (optional)</Label>
+                      <Label htmlFor="suite-description" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description (optional)</Label>
                       <Input
                         id="suite-description"
                         placeholder="e.g., Tests reasoning and logic capabilities"
                         value={newSuiteDescription}
                         onChange={(e) => setNewSuiteDescription(e.target.value)}
+                        className="bg-background/50"
                       />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                    <Button variant="ghost" onClick={() => setDialogOpen(false)}>
                       Cancel
                     </Button>
                     <Button onClick={handleCreateSuite} disabled={!newSuiteName.trim()}>
-                      Create
+                      Create Suite
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -121,14 +125,17 @@ export function PromptManager() {
             </div>
           }
         />
-      </>
+      </div>
     )
   }
 
   return (
-    <div className="h-full min-h-0 flex flex-col gap-4 sm:gap-6">
-      <div className="surface-strong rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between shrink-0">
-        <div className="min-w-0">
+    <div className="h-full min-h-0 flex flex-col gap-4 sm:gap-6 max-w-[1600px] mx-auto w-full">
+      <div className="surface p-4 sm:p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between shrink-0 shadow-sm border-border/40">
+        <div className="min-w-0 flex items-center gap-3">
+          <div className="bg-primary/10 p-2 rounded-lg text-primary">
+            <FolderOpen className="h-5 w-5" />
+          </div>
           <TestSuiteSelector />
         </div>
         <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center shrink-0">
@@ -136,21 +143,21 @@ export function PromptManager() {
           <BenchmarkGeneratorDialog />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" className="gap-2 bg-background/50">
+                <Plus className="h-4 w-4" />
                 New Suite
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="rounded-xl border-border/40 bg-background/95 backdrop-blur-xl">
               <DialogHeader>
-                <DialogTitle>Create Test Suite</DialogTitle>
+                <DialogTitle className="text-gradient">Create Test Suite</DialogTitle>
                 <DialogDescription>
                   A test suite contains a system prompt and multiple test cases
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 py-2">
                 <div className="space-y-2">
-                  <Label htmlFor="suite-name">Name</Label>
+                  <Label htmlFor="suite-name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</Label>
                   <Input
                     id="suite-name"
                     placeholder="e.g., Logic Puzzles Benchmark"
@@ -159,7 +166,7 @@ export function PromptManager() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="suite-description">Description (optional)</Label>
+                  <Label htmlFor="suite-description" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description (optional)</Label>
                   <Input
                     id="suite-description"
                     placeholder="e.g., Tests reasoning and logic capabilities"
@@ -169,7 +176,7 @@ export function PromptManager() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                <Button variant="ghost" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button onClick={handleCreateSuite} disabled={!newSuiteName.trim()}>
@@ -182,18 +189,24 @@ export function PromptManager() {
       </div>
 
       {activeTestSuite && (
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2 items-stretch flex-1 min-h-0">
-          <div className="flex flex-col gap-4 sm:gap-6 min-h-0">
-            <SystemPromptEditor testSuite={activeTestSuite} />
-            <JudgePromptEditor testSuite={activeTestSuite} />
-          </div>
-          <div className="min-h-0 min-w-0 flex">
-            <div className="flex-1 min-h-0">
+        <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0 items-stretch surface overflow-hidden border-border/40 shadow-sm">
+          <ResizablePanel defaultSize={35} minSize={20} className="flex flex-col gap-0 border-r border-border/40 bg-background/40 min-h-0 bg-muted/20">
+            <div className="flex-1 overflow-auto border-b border-border/40 bg-background/40 min-h-0 p-0 relative bg-background/40 backdrop-blur-sm">
+              <SystemPromptEditor testSuite={activeTestSuite} />
+            </div>
+            <div className="flex-1 overflow-auto min-h-0 p-0 relative bg-background/40 backdrop-blur-sm">
+              <JudgePromptEditor testSuite={activeTestSuite} />
+            </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle className="bg-border/40 hover:bg-primary/50 transition-colors" />
+          <ResizablePanel defaultSize={65} minSize={30} className="min-h-0 min-w-0 bg-background/40 flex flex-col">
+            <div className="flex-1 min-h-0 flex flex-col">
               <TestCaseList testSuite={activeTestSuite} />
             </div>
-          </div>
-        </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       )}
     </div>
   )
 }
+

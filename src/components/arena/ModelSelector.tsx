@@ -297,10 +297,10 @@ export function ModelSelector({ useCodeArenaStore: useCodeArena = false }: Model
               return (
                 <div
                   key={model.id}
-                  className={`flex items-center gap-3 rounded-xl border border-border/70 bg-background/60 p-3 cursor-pointer transition-all ${
+                  className={`flex items-center gap-3 rounded-lg border border-border bg-background p-3 cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-primary/10 border-primary shadow-sm'
-                      : 'hover:bg-muted/70 hover:border-border'
+                      ? 'bg-primary/10 border-l-2 border-l-primary shadow-none'
+                      : 'hover:bg-muted/50 hover:border-l-2 hover:border-l-primary'
                   }`}
                   onClick={() => toggleModelSelection(model.id)}
                 >

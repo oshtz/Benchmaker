@@ -19,7 +19,7 @@ function App() {
       <div className="flex-1 min-h-0 overflow-hidden relative z-10">
         <Tabs defaultValue="prompts" className="h-full min-h-0 flex flex-col">
           <Header />
-          <main className="w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 flex-1 min-h-0 flex flex-col">
+          <main className="w-full p-2 sm:p-4 flex-1 min-h-0 flex flex-col">
             <MainTabs />
           </main>
         </Tabs>

@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react'
 import { Plus, Trash2, Edit, ChevronDown, ChevronRight, Download, Upload, FileJson, FileSpreadsheet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
@@ -287,15 +286,15 @@ export function TestCaseList({ testSuite }: TestCaseListProps) {
         onChange={handleImport}
         className="hidden"
       />
-      <Card className="h-full flex flex-col min-w-0 min-h-0 overflow-hidden">
-        <CardHeader className="pb-3 shrink-0">
+      <div className="h-full flex flex-col min-w-0 min-h-0 overflow-hidden bg-transparent">
+        <div className="p-4 border-b border-border/40 shrink-0 bg-background/60 backdrop-blur-md">
           <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
             <div className="min-w-0">
-              <CardTitle className="text-base sm:text-lg">Test Cases</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-primary">Test Cases</h3>
+              <p className="text-xs text-muted-foreground mt-1">
                 {testSuite.testCases.length} test case
                 {testSuite.testCases.length !== 1 ? 's' : ''}
-              </CardDescription>
+              </p>
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <DropdownMenu>
@@ -330,8 +329,8 @@ export function TestCaseList({ testSuite }: TestCaseListProps) {
               </Button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="flex-1 p-0 overflow-hidden min-w-0 min-h-0">
+        </div>
+        <div className="flex-1 p-0 overflow-hidden min-w-0 min-h-0">
           <div className="h-full overflow-y-auto px-4 pb-4 sm:px-5 sm:pb-5 lg:px-6 lg:pb-6">
             {testSuite.testCases.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -342,10 +341,10 @@ export function TestCaseList({ testSuite }: TestCaseListProps) {
                 {testSuite.testCases.map((testCase, index) => (
                   <div
                     key={testCase.id}
-                    className="border border-border/70 rounded-xl overflow-hidden bg-background/50 min-w-0"
+                    className="border border-border/40 rounded-xl overflow-hidden bg-card shadow-sm min-w-0"
                   >
                     <div
-                      className="group flex items-center gap-2 p-3 bg-muted/40 cursor-pointer hover:bg-muted/70 transition-colors min-w-0"
+                      className="group flex items-center gap-2 p-3 bg-muted/20 cursor-pointer hover:bg-muted/50 hover:border-l-2 hover:border-l-primary transition-colors min-w-0"
                       onClick={() => toggleExpanded(testCase.id)}
                     >
                       {expandedIds.has(testCase.id) ? (
@@ -428,8 +427,8 @@ export function TestCaseList({ testSuite }: TestCaseListProps) {
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <TestCaseEditor
         testSuiteId={testSuite.id}
