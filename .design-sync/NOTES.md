@@ -108,3 +108,23 @@ and no `node_modules/benchmaker`, so the converter runs in **synth-entry**
   synth-entry exclusion key, migrate the lists back into config and simplify the
   fork. The re-stage also bumped the grade contract → a one-time full re-grade of
   all 22 (renders unchanged; verdicts reproduced from fresh sheets).
+
+## Token classifier — Tailwind v4 internals tagged `@kind other`
+
+- The claude.ai/design app's self-check scrapes **every** CSS custom property in
+  the `styles.css` @import closure and promotes it to a design token (a known
+  "token pollution" the converter's `lib/css.mjs` documents and tolerates). For a
+  Tailwind-v4-compiled bundle that wrongly flags ~67 utility internals as tokens:
+  all `--tw-*` (`@property` registrations + under-utility assignments), the
+  `--default-transition-duration` / `--default-transition-timing-function` pair,
+  and `--animate-spin`.
+- **Fix lives in `prebuild.mjs`** (step 2b): after the Tailwind compile it tags
+  every such declaration/registration with `/* @kind other */` so the classifier
+  skips them. Real token families (`--color-*`, `--spacing`, `--text-*`,
+  `--radius-*`, `--font-weight-*`, `--tracking-*`) are deliberately left alone.
+  Annotation, not deletion — the props are functional (utilities read them via
+  `var()`). 225 tags on this build.
+- **Watch:** if a Tailwind upgrade renames its internal props, or the app flags a
+  new family as tokens, update the `INTERNAL_DECL` / `INTERNAL_PROP` regexes in
+  `prebuild.mjs`. Verify after a build with
+  `grep -c "@kind other" ds-bundle/_ds_bundle.css`.
