@@ -1,130 +1,49 @@
-import { useEffect } from 'react'
-import { Key, Code2 } from 'lucide-react'
-import { EmptyState } from '@/components/ui/empty-state'
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
+import { useEffect, useState } from 'react'
+import { ChevronDown, ChevronRight, Code2, Key, Settings2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useModelStore } from '@/stores/modelStore'
+import { useCodeArenaStore } from '@/stores/codeArenaStore'
 import { getOpenRouterClient } from '@/services/openrouter'
+import { ApiKeyManager } from '@/components/settings/ApiKeyManager'
 import { CodeArenaHeader } from './CodeArenaHeader'
 import { CodeArenaGrid } from './CodeArenaGrid'
 import { CodeArenaExecutionControls } from './CodeArenaExecutionControls'
 import { CodeArenaJudgeSelector } from './CodeArenaJudgeSelector'
+import { CodeArenaParameters } from './CodeArenaParameters'
+import { CodeArenaReview } from './CodeArenaReview'
 import { ModelSelector } from '@/components/arena/ModelSelector'
 import { ExecutionSafetyPanel } from '@/components/arena/ExecutionSafetyPanel'
 
+const stages = [{ id: 'configure', label: 'Configure' }, { id: 'create', label: 'Create' }, { id: 'evaluate', label: 'Evaluate' }, { id: 'export', label: 'Export' }] as const
+
 export function CodeArena() {
   const { apiKey } = useSettingsStore()
-  const {
-    setAvailableModels,
-    setIsLoadingModels,
-    setModelsError,
-    setLastFetchedAt,
-    lastFetchedAt,
-    availableModels,
-  } = useModelStore()
+  const { stage, setStage, configOpen, setConfigOpen } = useCodeArenaStore()
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const modelStore = useModelStore()
 
-  // Fetch models when API key is available
   useEffect(() => {
     if (!apiKey) return
-
-    // Only fetch if we haven't fetched in the last 5 minutes
-    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
-    if (lastFetchedAt && lastFetchedAt > fiveMinutesAgo && availableModels.length > 0) {
-      return
-    }
-
-    const fetchModels = async () => {
-      setIsLoadingModels(true)
-      setModelsError(null)
-
-      try {
-        const client = getOpenRouterClient(apiKey)
-        const models = await client.fetchModels()
-        setAvailableModels(models)
-        setLastFetchedAt(Date.now())
-      } catch (error) {
-        setModelsError(
-          error instanceof Error ? error.message : 'Failed to fetch models'
-        )
-      } finally {
-        setIsLoadingModels(false)
-      }
-    }
-
-    fetchModels()
+    const fresh = modelStore.lastFetchedAt && modelStore.lastFetchedAt > Date.now() - 300000 && modelStore.availableModels.length > 0
+    if (fresh) return
+    const fetchModels = async () => { modelStore.setIsLoadingModels(true); modelStore.setModelsError(null); try { modelStore.setAvailableModels(await getOpenRouterClient(apiKey).fetchModels()); modelStore.setLastFetchedAt(Date.now()) } catch (error) { modelStore.setModelsError(error instanceof Error ? error.message : 'Failed to fetch models') } finally { modelStore.setIsLoadingModels(false) } }
+    void fetchModels()
   }, [apiKey])
 
-  if (!apiKey) {
-    return (
-      <EmptyState
-        icon={Key}
-        title="API Key Required"
-        description="Connect your OpenRouter account to access AI models for code generation"
-        variant="warning"
-        steps={[
-          {
-            number: 1,
-            title: 'Get an API key',
-            description: 'Sign up at openrouter.ai and generate an API key',
-          },
-          {
-            number: 2,
-            title: 'Click the key icon in the header',
-            description: 'Enter your API key to unlock model access',
-          },
-        ]}
-      />
-    )
-  }
-
-  return (
-    <div className="h-full min-h-0 flex flex-col">
-      {/* Header section */}
-      <div className="surface border-b-0 p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between shrink-0 mb-4">
-        <div className="min-w-0 flex items-center gap-3">
-          <Code2 className="h-6 w-6 text-primary shrink-0" />
-          <div>
-            <h2 className="headline">Code Arena</h2>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Compare AI models generating frontend code with live preview
-            </p>
-          </div>
-        </div>
-        <CodeArenaExecutionControls />
-      </div>
-
-      {/* Main content with resizable panels */}
-      <div className="flex-1 min-h-0">
-        <ResizablePanelGroup direction="horizontal" className="h-full rounded-xl">
-          {/* Left panel - Configuration */}
-          <ResizablePanel defaultSize="25%" minSize="15%" maxSize="40%">
-            <ScrollArea className="h-full w-full">
-              <div className="flex flex-col gap-4 pr-2 w-full">
-                <CodeArenaHeader />
-                <div className="flex-1 min-h-0">
-                  <ModelSelector useCodeArenaStore={true} />
-                </div>
-                <div className="shrink-0">
-                  <ExecutionSafetyPanel />
-                </div>
-                <div className="shrink-0">
-                  <CodeArenaJudgeSelector />
-                </div>
-              </div>
-            </ScrollArea>
-          </ResizablePanel>
-
-          <ResizableHandle withHandle />
-
-          {/* Right panel - Model outputs grid */}
-          <ResizablePanel defaultSize="75%" minSize="50%">
-            <div className="h-full pl-2">
-              <CodeArenaGrid />
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
-    </div>
-  )
+  return <div className="flex h-full min-h-0 flex-col gap-3">
+    <header className="surface shrink-0 p-3 sm:p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><Code2 className="h-6 w-6 shrink-0 text-primary" /><div><h2 className="headline">Code Arena</h2><p className="text-xs text-muted-foreground sm:text-sm">Create, freeze, evaluate, and export reproducible frontend comparisons.</p></div></div><div className="flex items-center gap-2">{(stage === 'configure' || stage === 'create') && <CodeArenaExecutionControls />}</div></div>
+      <nav className="mt-4 grid grid-cols-4 gap-1" aria-label="Code Arena stages">{stages.map((item, index) => <Button key={item.id} variant={stage === item.id ? 'default' : 'ghost'} className="h-auto justify-start gap-2 px-2 py-2 text-xs sm:px-3 sm:text-sm" onClick={() => setStage(item.id)}><span className="flex h-5 w-5 items-center justify-center rounded-full border text-[10px]">{index + 1}</span>{item.label}</Button>)}</nav>
+    </header>
+    {!apiKey && <div className="flex shrink-0 items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3"><div className="flex items-center gap-2 text-sm"><Key className="h-4 w-4 text-amber-500" /><span>Explore the workspace now. Add an OpenRouter key when you’re ready to run models.</span></div><ApiKeyManager /></div>}
+    <main className="flex-1 min-h-0">
+      {(stage === 'configure' || stage === 'create') ? <div className={`grid h-full min-h-0 gap-3 ${configOpen ? 'xl:grid-cols-[minmax(280px,360px)_1fr]' : 'grid-cols-1'}`}>
+        <Collapsible open={configOpen} onOpenChange={setConfigOpen} className="min-h-0"><div className="mb-2 flex items-center"><CollapsibleTrigger asChild><Button variant="outline" size="sm" className="gap-2"><Settings2 className="h-4 w-4" />Configuration {configOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</Button></CollapsibleTrigger></div><CollapsibleContent className="h-[calc(100%-42px)]"><ScrollArea className="h-full"><div className="space-y-3 pr-2"><CodeArenaHeader /><div className={!apiKey ? 'pointer-events-none opacity-55' : ''} aria-disabled={!apiKey}><ModelSelector useCodeArenaStore /></div><ExecutionSafetyPanel /><CodeArenaJudgeSelector /><Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}><CollapsibleTrigger asChild><Button variant="outline" className="w-full justify-between">Advanced {advancedOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</Button></CollapsibleTrigger><CollapsibleContent className="pt-2"><CodeArenaParameters /></CollapsibleContent></Collapsible></div></ScrollArea></CollapsibleContent></Collapsible>
+        <section className="min-h-0"><CodeArenaGrid /></section>
+      </div> : <CodeArenaReview mode={stage} />}
+    </main>
+  </div>
 }

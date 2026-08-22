@@ -24,6 +24,7 @@ export function CodeArenaExecutionControls() {
     setAbortController,
     initializeOutputs,
     clearOutputs,
+    setStage,
   } = useCodeArenaStore()
 
   const isRunning = executionStatus === 'running'
@@ -37,8 +38,11 @@ export function CodeArenaExecutionControls() {
     judgeModelId,
   })
   const overBudget = isOverBudget(estimatedCost, maxRunCostUsd)
+  const generationCost = estimateCodeArenaRunCost({ prompt, systemPrompt, modelIds: selectedModelIds, availableModels, parameters, judgeEnabled: false, judgeModelId: null })
+  const judgeCost = Math.max(0, estimatedCost - generationCost)
   const hasRunInputs = prompt.trim().length > 0 && selectedModelIds.length > 0 && apiKey
-  const canRun = hasRunInputs && !overBudget
+  const judgeReady = !judgeEnabled || Boolean(judgeModelId)
+  const canRun = hasRunInputs && judgeReady && !overBudget
 
   const handleRun = async () => {
     if (!hasRunInputs || isRunning) return
@@ -54,6 +58,7 @@ export function CodeArenaExecutionControls() {
 
     // Initialize outputs for all selected models
     initializeOutputs(selectedModelIds)
+    setStage('create')
 
     // Create abort controller
     const controller = new AbortController()
@@ -71,10 +76,11 @@ export function CodeArenaExecutionControls() {
         judgeEnabled ? judgeModelId : null,
         { concurrencyLimit }
       )
-      setExecutionStatus('completed')
+      const hadErrors = [...useCodeArenaStore.getState().outputs.values()].some((output) => output.status === 'failed')
+      setExecutionStatus(hadErrors ? 'completed-with-errors' : 'completed')
       toast({
-        title: 'Code Arena Complete',
-        description: `Generated code from ${selectedModelIds.length} model(s)`,
+        title: hadErrors ? 'Completed with errors' : 'Code Arena Complete',
+        description: hadErrors ? 'Some models failed. Completed outputs are still available for evaluation.' : `Generated code from ${selectedModelIds.length} model(s)`,
       })
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
@@ -152,13 +158,14 @@ export function CodeArenaExecutionControls() {
         <span className="text-xs text-muted-foreground ml-2">
           {executionStatus === 'running' && 'Generating...'}
           {executionStatus === 'completed' && 'Completed'}
+          {executionStatus === 'completed-with-errors' && 'Completed with errors'}
           {executionStatus === 'failed' && 'Failed'}
           {executionStatus === 'cancelled' && 'Cancelled'}
         </span>
       )}
       {selectedModelIds.length > 0 && (
         <span className={overBudget ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}>
-          Est. {formatCost(estimatedCost)}
+          Gen. {formatCost(generationCost)}{judgeEnabled && ` + judge ${formatCost(judgeCost)}`}
           {maxRunCostUsd > 0 && ` / cap ${formatCost(maxRunCostUsd)}`}
         </span>
       )}

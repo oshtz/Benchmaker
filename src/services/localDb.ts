@@ -50,10 +50,26 @@ export function normalizeSnapshot(parsed: Partial<BenchmakerDb> | null): Benchma
     updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : Date.now(),
     testSuites: parsed.testSuites,
     runs: parsed.runs,
-    codeArenaRuns: Array.isArray(parsed.codeArenaRuns) ? parsed.codeArenaRuns : [],
+    codeArenaRuns: Array.isArray(parsed.codeArenaRuns) ? parsed.codeArenaRuns.map(normalizeCodeArenaRun) : [],
     activeTestSuiteId: parsed.activeTestSuiteId ?? null,
     currentRunId: parsed.currentRunId ?? null,
     currentCodeArenaRunId: parsed.currentCodeArenaRunId ?? null,
+  }
+}
+
+export function normalizeCodeArenaRun(run: CodeArenaRun): CodeArenaRun {
+  return {
+    ...run,
+    captureProfile: run.captureProfile ?? 'fixed-v1',
+    exportArtifacts: run.exportArtifacts ?? [],
+    outputs: Array.isArray(run.outputs) ? run.outputs.map((output) => ({
+      ...output,
+      captures: output.captures ?? [],
+      runtimeReport: output.runtimeReport ?? {
+        consoleMessages: [], runtimeErrors: [], requestFailures: [], blockedRequests: [],
+      },
+      judgeStatus: output.judgeStatus ?? 'not-requested',
+    })) : [],
   }
 }
 

@@ -2,8 +2,7 @@ import { getOpenRouterClient, type StreamResult } from './openrouter'
 import { useCodeArenaStore } from '@/stores/codeArenaStore'
 import { useCodeArenaRunStore, createCodeArenaRun } from '@/stores/codeArenaRunStore'
 import { useModelStore } from '@/stores/modelStore'
-import { extractCodeFromStreamingContent, extractCodeFromResponse } from './codeExtractor'
-import { scoreCodeArenaOutput } from '@/scoring/code-arena-judge'
+import { extractCodeFromResponse } from './codeExtractor'
 import { isAbortError, throwIfAborted, withAbortableTimeout } from './abort'
 import type { ChatMessage, ModelParameters, OpenRouterModel, CodeArenaOutput } from '@/types'
 
@@ -36,8 +35,8 @@ export async function executeCodeArenaRun(
   options: { concurrencyLimit?: number } = {}
 ): Promise<void> {
   const client = getOpenRouterClient(apiKey)
-  const { updateOutput, setOutputScore } = useCodeArenaStore.getState()
-  const { addRun, updateOutput: updateRunOutput, setOutputScore: setRunOutputScore, completeRun } = useCodeArenaRunStore.getState()
+  const { updateOutput } = useCodeArenaStore.getState()
+  const { addRun, updateOutput: updateRunOutput, completeRun, updateRun } = useCodeArenaRunStore.getState()
   const { availableModels } = useModelStore.getState()
 
   // Create a map for quick model lookup
@@ -46,6 +45,7 @@ export async function executeCodeArenaRun(
   // Create and store the run
   const run = createCodeArenaRun(prompt, systemPrompt, modelIds, parameters, judgeModelId || undefined)
   addRun(run)
+  updateRun(run.id, { status: 'running' })
 
   // Initialize outputs in the run
   for (const modelId of modelIds) {
@@ -107,16 +107,11 @@ export async function executeCodeArenaRun(
               (chunk) => {
                 streamedContent += chunk
 
-                // Extract code from streaming content for live preview
-                const extractedCode = extractCodeFromStreamingContent(streamedContent)
-
                 updateOutput(modelId, {
                   streamedContent,
-                  extractedCode,
                 })
                 updateRunOutput(run.id, modelId, {
                   streamedContent,
-                  extractedCode,
                 })
               },
               { signal: requestSignal }
@@ -143,28 +138,12 @@ export async function executeCodeArenaRun(
           promptTokens: result.usage?.prompt_tokens,
           completionTokens: result.usage?.completion_tokens,
           cost,
+          judgeStatus: judgeModelId ? 'not-requested' : 'not-requested',
         }
 
         updateOutput(modelId, completedOutput)
         updateRunOutput(run.id, modelId, completedOutput)
 
-        // Score with LLM judge if enabled
-        if (judgeModelId) {
-          try {
-            const score = await scoreCodeArenaOutput(
-              prompt,
-              finalExtractedCode,
-              client,
-              judgeModelId,
-              signal
-            )
-            setOutputScore(modelId, score)
-            setRunOutputScore(run.id, modelId, score)
-          } catch (error) {
-            if (isAbortError(error)) throw error
-            console.error('Failed to score output:', error)
-          }
-        }
       } catch (error) {
         if (isAbortError(error)) {
           updateOutput(modelId, { status: 'cancelled' })

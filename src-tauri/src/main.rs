@@ -128,6 +128,18 @@ pub struct CodeArenaOutput {
     pub cost: Option<f64>,
     pub streamed_content: Option<String>,
     pub score: Option<ScoringResult>,
+    #[serde(default)]
+    pub captures: Option<serde_json::Value>,
+    #[serde(default)]
+    pub runtime_report: Option<serde_json::Value>,
+    #[serde(default)]
+    pub rubric_scores: Option<serde_json::Value>,
+    #[serde(default)]
+    pub judge_status: Option<String>,
+    #[serde(default)]
+    pub judge_confidence: Option<f64>,
+    #[serde(default)]
+    pub judge_cost: Option<f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -145,6 +157,14 @@ pub struct CodeArenaRun {
     pub started_at: i64,
     pub completed_at: Option<i64>,
     pub judge_model_id: Option<String>,
+    #[serde(default)]
+    pub capture_profile: Option<String>,
+    #[serde(default)]
+    pub evaluation: Option<serde_json::Value>,
+    #[serde(default)]
+    pub human_winner_model_id: Option<String>,
+    #[serde(default)]
+    pub export_artifacts: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1454,6 +1474,8 @@ fn validate_export_extension(extension: &str) -> Result<&'static str, String> {
         "html" => Ok("html"),
         "pdf" => Ok("pdf"),
         "png" => Ok("png"),
+        "zip" => Ok("zip"),
+        "mp4" => Ok("mp4"),
         _ => Err("Unsupported export extension.".to_string()),
     }
 }
@@ -1505,6 +1527,8 @@ async fn save_export_file(
         "html" => "HTML report",
         "pdf" => "PDF report",
         "png" => "PNG image",
+        "zip" => "comparison ZIP",
+        "mp4" => "MP4 video",
         _ => unreachable!(),
     };
     let safe_file_name = sanitize_export_file_name(&file_name, extension);
@@ -1520,9 +1544,42 @@ async fn save_export_file(
     };
 
     path.set_extension(extension);
-    fs::write(&path, bytes).map_err(|err| format!("Unable to save export: {}", err))?;
+    let temporary_path = path.with_extension(format!("{}.partial", extension));
+    fs::write(&temporary_path, bytes).map_err(|err| format!("Unable to save export: {}", err))?;
+    fs::rename(&temporary_path, &path)
+        .map_err(|err| format!("Unable to finalize export: {}", err))?;
 
     Ok(Some(path.to_string_lossy().to_string()))
+}
+
+#[tauri::command]
+fn save_code_arena_artifact(
+    app: AppHandle,
+    run_id: String,
+    file_name: String,
+    bytes: Vec<u8>,
+) -> Result<String, String> {
+    if bytes.is_empty() {
+        return Err("Artifact is empty.".to_string());
+    }
+    let data_dir = app
+        .path_resolver()
+        .app_data_dir()
+        .ok_or_else(|| "Unable to resolve app data directory.".to_string())?;
+    let safe_run = sanitize_export_file_name(&run_id, "run")
+        .trim_end_matches(".run")
+        .to_string();
+    let safe_name = Path::new(&file_name)
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or("capture.png");
+    let directory = data_dir.join("code-arena-artifacts").join(safe_run);
+    fs::create_dir_all(&directory).map_err(|err| err.to_string())?;
+    let path = directory.join(safe_name);
+    let temporary_path = path.with_extension("partial");
+    fs::write(&temporary_path, bytes).map_err(|err| err.to_string())?;
+    fs::rename(&temporary_path, &path).map_err(|err| err.to_string())?;
+    Ok(path.to_string_lossy().to_string())
 }
 
 #[cfg(test)]
@@ -1602,11 +1659,21 @@ mod tests {
                     raw_score: Some(90.0),
                     max_score: Some(100.0),
                 }),
+                captures: None,
+                runtime_report: None,
+                rubric_scores: None,
+                judge_status: Some("completed".to_string()),
+                judge_confidence: Some(0.8),
+                judge_cost: None,
             }],
             status: "completed".to_string(),
             started_at: 100,
             completed_at: Some(200),
             judge_model_id: Some("judge/model".to_string()),
+            capture_profile: Some("fixed-v1".to_string()),
+            evaluation: None,
+            human_winner_model_id: None,
+            export_artifacts: None,
         }
     }
 
@@ -2333,6 +2400,7 @@ fn main() {
             clear_stored_api_key,
             // Export files
             save_export_file,
+            save_code_arena_artifact,
             // Updater commands
             get_update_platform,
             write_update_file,

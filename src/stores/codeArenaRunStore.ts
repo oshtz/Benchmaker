@@ -110,9 +110,13 @@ export const useCodeArenaRunStore = create<CodeArenaRunState>()((set, get) => ({
   completeRun: (runId) => {
     set((state) => ({
       runs: state.runs.map((run) =>
-        run.id === runId
-          ? { ...run, status: 'completed', completedAt: Date.now() }
-          : run
+        run.id === runId ? {
+          ...run,
+          status: run.outputs.some((output) => output.status === 'failed')
+            ? 'completed-with-errors'
+            : 'completed',
+          completedAt: Date.now(),
+        } : run
       ),
     }))
   },
@@ -145,5 +149,7 @@ export function createCodeArenaRun(
     status: 'idle',
     startedAt: Date.now(),
     judgeModelId,
+    captureProfile: 'fixed-v1',
+    exportArtifacts: [],
   }
 }

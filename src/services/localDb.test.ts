@@ -57,6 +57,11 @@ function db(overrides: Partial<BenchmakerDb> = {}): BenchmakerDb {
 }
 
 describe('normalizeSnapshot', () => {
+  it('supplies backward-compatible Code Arena evaluation fields', () => {
+    const normalized = normalizeSnapshot(db())
+    expect(normalized?.codeArenaRuns[0].captureProfile).toBe('fixed-v1')
+    expect(normalized?.codeArenaRuns[0].exportArtifacts).toEqual([])
+  })
   it('rejects payloads without the required benchmark arrays', () => {
     expect(normalizeSnapshot({ testSuites: [] } as Partial<BenchmakerDb>)).toBeNull()
   })

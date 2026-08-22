@@ -108,7 +108,7 @@ export interface ModelParameters {
 }
 
 // Execution Types
-export type ExecutionStatus = 'idle' | 'running' | 'completed' | 'failed' | 'cancelled'
+export type ExecutionStatus = 'idle' | 'running' | 'completed' | 'completed-with-errors' | 'failed' | 'cancelled'
 
 export interface TestCaseResult {
   testCaseId: string
@@ -143,6 +143,52 @@ export interface RunResult {
 }
 
 // Code Arena Types
+export type CodeArenaViewport = 'desktop' | 'mobile'
+export type CodeArenaViewMode = 'preview' | 'code' | 'console'
+export type CodeArenaJudgeStatus = 'not-requested' | 'pending' | 'completed' | 'unavailable'
+
+export interface CodeArenaCapture {
+  viewport: CodeArenaViewport
+  width: number
+  height: number
+  path?: string
+  dataUrl?: string
+  createdAt: number
+}
+
+export interface CodeArenaRuntimeReport {
+  consoleMessages: Array<{ level: 'log' | 'info' | 'warn' | 'error'; message: string }>
+  runtimeErrors: string[]
+  requestFailures: Array<{ url: string; reason: string }>
+  blockedRequests: string[]
+}
+
+export interface CodeArenaRubricScores {
+  visualInstructionAdherence: number
+  functionalityRuntime: number
+  responsiveness: number
+  codeQuality: number
+  accessibility: number
+  total: number
+}
+
+export interface CodeArenaEvaluation {
+  rubricVersion: string
+  judgeModelId?: string
+  captureProfile: string
+  evaluatedAt: number
+  generationCost: number
+  judgeCost?: number
+}
+
+export interface CodeArenaExportArtifact {
+  id: string
+  kind: 'html' | 'png' | 'zip' | 'mp4'
+  path: string
+  createdAt: number
+  metadata?: Record<string, string | number | boolean>
+}
+
 export interface CodeArenaOutput {
   modelId: string
   rawResponse: string
@@ -155,6 +201,12 @@ export interface CodeArenaOutput {
   cost?: number
   streamedContent?: string
   score?: ScoringResult
+  captures?: CodeArenaCapture[]
+  runtimeReport?: CodeArenaRuntimeReport
+  rubricScores?: CodeArenaRubricScores
+  judgeStatus?: CodeArenaJudgeStatus
+  judgeConfidence?: number
+  judgeCost?: number
 }
 
 export interface CodeArenaRun {
@@ -169,6 +221,26 @@ export interface CodeArenaRun {
   startedAt: number
   completedAt?: number
   judgeModelId?: string
+  captureProfile?: string
+  evaluation?: CodeArenaEvaluation
+  humanWinnerModelId?: string
+  exportArtifacts?: CodeArenaExportArtifact[]
+}
+
+export interface CodeArenaCaptureRequest {
+  runId: string
+  modelIds: string[]
+  viewports: CodeArenaViewport[]
+  allowRemoteAssets: boolean
+}
+
+export interface CodeArenaExportRequest {
+  runId: string
+  kind: 'html' | 'png' | 'zip' | 'mp4'
+  modelIds: string[]
+  viewport?: CodeArenaViewport
+  includeRawHtml?: boolean
+  aspect?: 'wide' | 'square' | 'portrait' | 'story'
 }
 
 // Settings Types
@@ -199,15 +271,27 @@ export interface ChatMessage {
   content: string
 }
 
+export interface ChatRequestMessage {
+  role: ChatMessage['role']
+  content: string | Array<
+    | { type: 'text'; text: string }
+    | { type: 'image_url'; image_url: { url: string } }
+  >
+}
+
 export interface ChatCompletionRequest {
   model: string
-  messages: ChatMessage[]
+  messages: ChatRequestMessage[]
   temperature?: number
   top_p?: number
   max_tokens?: number
   frequency_penalty?: number
   presence_penalty?: number
   stream?: boolean
+  response_format?: {
+    type: 'json_schema'
+    json_schema: { name: string; strict?: boolean; schema: Record<string, unknown> }
+  }
 }
 
 export interface ChatCompletionResponse {

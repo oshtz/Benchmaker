@@ -16,19 +16,7 @@ export function CodeArenaJudgeSelector() {
   const { judgeEnabled, judgeModelId, setJudgeEnabled, setJudgeModelId } = useCodeArenaStore()
   const { availableModels, isLoadingModels } = useModelStore()
 
-  // Filter to models that are good for judging (typically larger models)
-  const judgeModels = availableModels.filter((model) => {
-    const id = model.id.toLowerCase()
-    // Include popular judge-capable models
-    return (
-      id.includes('gpt-4') ||
-      id.includes('claude-3') ||
-      id.includes('gemini') ||
-      id.includes('llama-3') ||
-      id.includes('mistral-large') ||
-      id.includes('command-r')
-    )
-  })
+  const judgeModels = availableModels
 
   return (
     <Card>
@@ -46,7 +34,7 @@ export function CodeArenaJudgeSelector() {
               Enable Judge
             </Label>
             <p className="text-xs text-muted-foreground">
-              Use an LLM to evaluate code quality
+              Score fixed desktop and mobile captures with a vision-capable model
             </p>
           </div>
           <Switch
@@ -89,6 +77,7 @@ export function CodeArenaJudgeSelector() {
                 )}
               </SelectContent>
             </Select>
+            {!judgeModelId && <p className="text-xs text-destructive">Choose a judge model before running.</p>}
           </div>
         )}
 
@@ -97,8 +86,7 @@ export function CodeArenaJudgeSelector() {
           <div className="flex items-start gap-2 p-2 bg-muted/50 rounded-lg">
             <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground">
-              The judge will evaluate each model's output based on visual accuracy, 
-              code quality, functionality, and responsiveness. Scores range from 0-100%.
+              Judging runs after capture. If the judge or capture worker is unavailable, the result stays unavailable instead of becoming a zero.
             </p>
           </div>
         )}
