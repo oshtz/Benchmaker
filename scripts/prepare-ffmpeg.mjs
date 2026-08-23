@@ -54,8 +54,8 @@ async function prepareHostSidecar() {
 async function prepareUniversalMacosSidecar() {
   if (process.platform !== 'darwin') throw new Error('Universal macOS FFmpeg must be prepared on macOS.')
   const assets = [
-    { arch: 'x64', binary: 'ebdddc936f61e14049a2d4b549a412b8a40deeff6540e58a9f2a2da9e6b18894', license: '2e1d16c72fd74e12063776371da757322f8b77589386532f4fd8634bde7de1af', source: 'e88a0325f8e5b75210355e37341824f074d3cd82def2125be54c914b62848a36' },
-    { arch: 'arm64', binary: 'a90e3db6a3fd35f6074b013f948b1aa45b31c6375489d39e572bea3f18336584', license: 'cb48bf09a11f5fb576cddb0431c8f5ed0a60157a9ec942adffc13907cbe083f2', source: '05ba4b92c96605434b1aaae3eedf5a2c280c9607bf78ffca9a5b536d9af2dc6a' },
+    { arch: 'x64', triple: 'x86_64-apple-darwin', binary: 'ebdddc936f61e14049a2d4b549a412b8a40deeff6540e58a9f2a2da9e6b18894', license: '2e1d16c72fd74e12063776371da757322f8b77589386532f4fd8634bde7de1af', source: 'e88a0325f8e5b75210355e37341824f074d3cd82def2125be54c914b62848a36' },
+    { arch: 'arm64', triple: 'aarch64-apple-darwin', binary: 'a90e3db6a3fd35f6074b013f948b1aa45b31c6375489d39e572bea3f18336584', license: 'cb48bf09a11f5fb576cddb0431c8f5ed0a60157a9ec942adffc13907cbe083f2', source: '05ba4b92c96605434b1aaae3eedf5a2c280c9607bf78ffca9a5b536d9af2dc6a' },
   ]
   const workspace = await mkdtemp(join(tmpdir(), 'benchmaker-ffmpeg-universal-'))
   try {
@@ -63,6 +63,7 @@ async function prepareUniversalMacosSidecar() {
       await downloadVerified(`ffmpeg-darwin-${asset.arch}`, asset.binary, join(workspace, `ffmpeg-${asset.arch}`))
       await downloadVerified(`darwin-${asset.arch}.LICENSE`, asset.license, join(workspace, `COPYING-${asset.arch}.txt`))
       await downloadVerified(`darwin-${asset.arch}.README`, asset.source, join(workspace, `SOURCE-${asset.arch}.txt`))
+      await chmod(join(workspace, `ffmpeg-${asset.arch}`), 0o755)
     }
     const universalPath = join(workspace, 'ffmpeg-universal-apple-darwin')
     execFileSync('xcrun', ['lipo', '-create', join(workspace, 'ffmpeg-x64'), join(workspace, 'ffmpeg-arm64'), '-output', universalPath], { stdio: 'inherit' })
@@ -73,6 +74,7 @@ async function prepareUniversalMacosSidecar() {
     await mkdir(resourceDirectory, { recursive: true })
     await copyFile(universalPath, join(binaryDirectory, 'ffmpeg-universal-apple-darwin'))
     for (const asset of assets) {
+      await copyFile(join(workspace, `ffmpeg-${asset.arch}`), join(binaryDirectory, `ffmpeg-${asset.triple}`))
       await copyFile(join(workspace, `COPYING-${asset.arch}.txt`), join(resourceDirectory, `COPYING-${asset.arch}.txt`))
       await copyFile(join(workspace, `SOURCE-${asset.arch}.txt`), join(resourceDirectory, `SOURCE-${asset.arch}.txt`))
     }

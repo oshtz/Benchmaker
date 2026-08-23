@@ -104,6 +104,21 @@ function checkPackageScripts() {
   } else {
     fail('Tauri bundle is missing the FFmpeg sidecar')
   }
+
+  const ffmpegScript = readText('scripts/prepare-ffmpeg.mjs')
+  const macSidecars = ['x86_64-apple-darwin', 'aarch64-apple-darwin']
+  for (const triple of macSidecars) {
+    if (ffmpegScript.includes(`triple: '${triple}'`)) {
+      pass(`Universal macOS preparation includes: ffmpeg-${triple}`)
+    } else {
+      fail(`Universal macOS preparation is missing: ffmpeg-${triple}`)
+    }
+  }
+  if (ffmpegScript.includes('join(binaryDirectory, `ffmpeg-${asset.triple}`)')) {
+    pass('Universal macOS preparation stages architecture-specific sidecars')
+  } else {
+    fail('Universal macOS preparation does not stage architecture-specific sidecars')
+  }
 }
 
 function checkWorkflowContract() {
