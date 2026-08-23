@@ -140,7 +140,7 @@ export function Arena() {
       <div className="surface border-b-0 p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between shrink-0">
         <div className="min-w-0">
           <h2 className="headline">Arena</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground truncate">
+          <p className="truncate text-sm text-muted-foreground">
             Active suite: {activeTestSuite.name} ({activeTestSuite.testCases.length} test
             cases)
           </p>

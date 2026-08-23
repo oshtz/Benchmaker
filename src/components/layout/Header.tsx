@@ -1,61 +1,49 @@
-import { ApiKeyManager } from '@/components/settings/ApiKeyManager'
-import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { BenchmarkProgress } from '@/components/layout/BenchmarkProgress'
-import { MainTabsList } from '@/components/layout/MainTabs'
 import { Badge } from '@/components/ui/badge'
 import { useTestSuiteStore } from '@/stores/testSuiteStore'
-import logoBlack from '/logo-black.png'
-import appWhite from '/app-white.png'
-import appBlack from '/app-black.png'
-import { UpdateStatus } from '@/components/layout/UpdateStatus'
+import { DitherGradient } from '@/components/dither-kit/gradient'
 
-export function Header() {
+const pageLabels: Record<string, string> = {
+  prompts: 'Prompt Library',
+  arena: 'Benchmark Arena',
+  'code-arena': 'Code Arena',
+  results: 'Results',
+  analytics: 'Analytics',
+  data: 'Local Data',
+  settings: 'Settings',
+}
+
+export function Header({ activeTab }: { activeTab: string }) {
   const { testSuites, activeTestSuiteId } = useTestSuiteStore()
   const activeSuite = testSuites.find((suite) => suite.id === activeTestSuiteId)
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/40 bg-background/60 backdrop-blur-2xl">
-      <div className="absolute inset-x-0 top-0 h-[2px] bg-brand-gradient" />
-      <div className="flex min-h-14 flex-wrap items-center gap-2 px-2 py-2 sm:min-h-16 sm:px-4 lg:flex-nowrap lg:gap-4 lg:px-6 lg:py-0">
-        <div className="order-1 flex min-w-0 flex-1 items-center gap-2 sm:gap-4 lg:flex-none">
-          <div className="flex items-center gap-2 p-1 sm:gap-3 sm:p-1.5">
-            <img
-              src={appWhite}
-              alt="App Icon"
-              className="h-7 sm:h-8 w-auto shrink-0 hidden dark:block rounded-[8px] shadow-sm"
-            />
-            <img
-              src={appBlack}
-              alt="App Icon"
-              className="h-7 sm:h-8 w-auto shrink-0 block dark:hidden rounded-[8px] shadow-sm"
-            />
-            <img
-              src={logoBlack}
-              alt="Benchmaker"
-              className="hidden h-7 w-auto shrink-0 logo-adaptive sm:block sm:h-8"
-            />
+    <header className="relative z-50 isolate shrink-0 overflow-hidden border-b border-border/40 bg-background/60 backdrop-blur-2xl">
+      <DitherGradient
+        from="blue"
+        to="purple"
+        direction="right"
+        opacity={0.1}
+        className="z-0"
+      />
+      <div className="absolute inset-x-0 top-0 z-20 h-[2px] overflow-hidden">
+        <DitherGradient from="green" to="purple" direction="right" opacity={1} />
+      </div>
+      <div className="relative z-10 flex h-14 min-w-0 items-center gap-3 px-3 sm:h-16 sm:px-5">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Workspace</p>
+            <h1 className="truncate text-sm font-bold sm:text-base">{pageLabels[activeTab] ?? 'Benchmaker'}</h1>
           </div>
           {activeSuite && (
-            <Badge variant="outline" className="text-[10px] hidden sm:inline-flex whitespace-nowrap bg-background/50 backdrop-blur-md">
+            <Badge variant="outline" className="hidden max-w-48 truncate whitespace-nowrap bg-background/50 text-[10px] backdrop-blur-md sm:inline-flex">
               {activeSuite.name}
             </Badge>
           )}
         </div>
-
-        <div className="order-3 flex w-full min-w-0 justify-start lg:order-2 lg:flex-1 lg:justify-center lg:px-4">
-          <MainTabsList className="w-full justify-start shadow-[0_2px_10px_rgb(0,0,0,0.05)] lg:w-auto lg:max-w-fit" />
-        </div>
-
-        <div className="order-2 ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 lg:order-3 lg:ml-0 lg:gap-4">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 lg:gap-4">
           <div className="hidden md:block">
             <BenchmarkProgress />
-          </div>
-          <UpdateStatus />
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="hidden sm:block">
-              <ThemeToggle />
-            </div>
-            <ApiKeyManager />
           </div>
         </div>
       </div>

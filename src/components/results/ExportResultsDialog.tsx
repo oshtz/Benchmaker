@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Download, FileText, Image as ImageIcon, Loader2, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DitherButton } from '@/components/dither-kit/button'
+import { DitherGradient } from '@/components/dither-kit/gradient'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -33,11 +35,13 @@ import {
   type BenchmarkExportOptions,
   type ExportMode,
   type ShareImagePreset,
+  type ShareImageDitherAssets,
   type ShareImageTemplate,
   type ShareImageTheme,
   type ShareImageVariant,
 } from '@/services/benchmarkExport'
 import type { RunResult, TestSuite } from '@/types'
+import { DitherExportAssets } from './DitherExportAssets'
 
 interface ExportResultsDialogProps {
   open: boolean
@@ -108,6 +112,10 @@ export function ExportResultsDialog({
 }: ExportResultsDialogProps) {
   const [options, setOptions] = useState<BenchmarkExportOptions>(DEFAULT_OPTIONS)
   const [isExporting, setIsExporting] = useState(false)
+  const [renderedDitherAssets, setRenderedDitherAssets] = useState<{
+    key: string
+    assets: ShareImageDitherAssets
+  } | null>(null)
   const { toast } = useToast()
 
   const exportDocument = useMemo(
@@ -115,10 +123,25 @@ export function ExportResultsDialog({
     [allRuns, options, run, testSuites],
   )
 
+  const ditherAssetKey = useMemo(
+    () => JSON.stringify({
+      models: exportDocument.modelRows.slice(0, 6).map((row) => [row.modelId, row.displayName, row.effectiveScore]),
+      scored: exportDocument.summary.scoredCount,
+      expected: exportDocument.summary.expectedResultCount,
+    }),
+    [exportDocument.modelRows, exportDocument.summary.expectedResultCount, exportDocument.summary.scoredCount],
+  )
+  const ditherAssets = renderedDitherAssets?.key === ditherAssetKey
+    ? renderedDitherAssets.assets
+    : undefined
+  const handleDitherAssetsReady = useCallback((key: string, assets: ShareImageDitherAssets) => {
+    setRenderedDitherAssets({ key, assets })
+  }, [])
+
   const sharePreviewSrc = useMemo(() => {
     if (options.mode !== 'share-image') return ''
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(generateShareImageSvg(exportDocument))}`
-  }, [exportDocument, options.mode])
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(generateShareImageSvg(exportDocument, ditherAssets))}`
+  }, [ditherAssets, exportDocument, options.mode])
 
   const updateOption = <Key extends keyof BenchmarkExportOptions>(
     key: Key,
@@ -148,7 +171,7 @@ export function ExportResultsDialog({
         return
       }
 
-      const blob = await generateShareImagePng(exportDocument)
+      const blob = await generateShareImagePng(exportDocument, ditherAssets)
       const result = await saveExportArtifact({
         blob,
         filename: buildShareImageFilename(exportDocument, options.imagePreset),
@@ -174,9 +197,10 @@ export function ExportResultsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Export Benchmark Results</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="relative isolate -mx-6 -mt-6 overflow-hidden border-b border-border/50 px-6 pb-4 pt-6">
+          <DitherGradient from="green" to="transparent" direction="right" opacity={0.25} />
+          <DialogTitle className="relative z-10">Export Benchmark Results</DialogTitle>
+          <DialogDescription className="relative z-10">
             Create a detailed HTML report or a compact share image for this run.
           </DialogDescription>
         </DialogHeader>
@@ -411,6 +435,12 @@ export function ExportResultsDialog({
                 <div className="overflow-hidden rounded-lg border border-border/60 bg-muted">
                   <img src={sharePreviewSrc} alt="Benchmark share image preview" className="block w-full" />
                 </div>
+                {!ditherAssets && (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Preparing Dither Kit layers…
+                  </div>
+                )}
               </div>
             ) : (
               <div className="rounded-lg border border-border/60">
@@ -436,16 +466,33 @@ export function ExportResultsDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isExporting}>
             Cancel
           </Button>
-          <Button onClick={handleExport} disabled={isExporting || exportDocument.summary.expectedResultCount === 0}>
+          <DitherButton
+            color="green"
+            bloom="low"
+            onClick={handleExport}
+            disabled={
+              isExporting
+              || exportDocument.summary.expectedResultCount === 0
+              || (options.mode === 'share-image' && !ditherAssets)
+            }
+            className="inline-flex h-9 items-center justify-center gap-2 px-4"
+          >
             {isExporting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="h-4 w-4" />
             )}
             Export {options.mode === 'scientific' ? 'HTML' : 'PNG'}
-          </Button>
+          </DitherButton>
         </DialogFooter>
       </DialogContent>
+      {open && options.mode === 'share-image' && !ditherAssets && (
+        <DitherExportAssets
+          assetKey={ditherAssetKey}
+          document={exportDocument}
+          onReady={handleDitherAssetsReady}
+        />
+      )}
     </Dialog>
   )
 }

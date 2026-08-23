@@ -5,6 +5,8 @@ node_modules/
 
 # Rust build artifacts
 src-tauri/target/
+src-tauri/binaries/ffmpeg-*
+src-tauri/resources/ffmpeg/
 
 # Build outputs
 dist/

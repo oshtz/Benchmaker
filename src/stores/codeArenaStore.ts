@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { ModelParameters, ExecutionStatus, CodeArenaOutput, ScoringResult } from '@/types'
+import type { ModelParameters, ExecutionStatus, CodeArenaOutput, ScoringResult, CodeArenaViewMode, CodeArenaViewport } from '@/types'
 import { DEFAULT_FRONTEND_SYSTEM_PROMPT } from '@/services/codeExtractor'
 
 interface CodeArenaState {
@@ -16,6 +16,12 @@ interface CodeArenaState {
   // Judge settings
   judgeEnabled: boolean
   judgeModelId: string | null
+  stage: 'configure' | 'create' | 'evaluate' | 'export'
+  configOpen: boolean
+  viewMode: CodeArenaViewMode
+  viewport: CodeArenaViewport
+  revealModels: boolean
+  allowRemoteAssets: boolean
   
   // Execution state
   executionStatus: ExecutionStatus
@@ -40,6 +46,12 @@ interface CodeArenaState {
   
   setJudgeEnabled: (enabled: boolean) => void
   setJudgeModelId: (modelId: string | null) => void
+  setStage: (stage: CodeArenaState['stage']) => void
+  setConfigOpen: (open: boolean) => void
+  setViewMode: (mode: CodeArenaViewMode) => void
+  setViewport: (viewport: CodeArenaViewport) => void
+  setRevealModels: (reveal: boolean) => void
+  setAllowRemoteAssets: (allow: boolean) => void
   
   setExecutionStatus: (status: ExecutionStatus) => void
   setCurrentRunId: (runId: string | null) => void
@@ -49,10 +61,6 @@ interface CodeArenaState {
   updateOutput: (modelId: string, updates: Partial<CodeArenaOutput>) => void
   setOutputScore: (modelId: string, score: ScoringResult) => void
   clearOutputs: () => void
-  
-  setViewMode: (modelId: string, isPreview: boolean) => void
-  toggleViewMode: (modelId: string) => void
-  setAllViewModes: (isPreview: boolean) => void
   
   reset: () => void
 }
@@ -73,6 +81,12 @@ export const useCodeArenaStore = create<CodeArenaState>()((set, get) => ({
   parameters: defaultParameters,
   judgeEnabled: false,
   judgeModelId: null,
+  stage: 'configure',
+  configOpen: true,
+  viewMode: 'preview',
+  viewport: 'desktop',
+  revealModels: false,
+  allowRemoteAssets: false,
   executionStatus: 'idle',
   currentRunId: null,
   abortController: null,
@@ -109,6 +123,12 @@ export const useCodeArenaStore = create<CodeArenaState>()((set, get) => ({
   setJudgeEnabled: (enabled) => set({ judgeEnabled: enabled }),
   
   setJudgeModelId: (modelId) => set({ judgeModelId: modelId }),
+  setStage: (stage) => set({ stage }),
+  setConfigOpen: (configOpen) => set({ configOpen }),
+  setViewMode: (viewMode) => set({ viewMode }),
+  setViewport: (viewport) => set({ viewport }),
+  setRevealModels: (revealModels) => set({ revealModels }),
+  setAllowRemoteAssets: (allowRemoteAssets) => set({ allowRemoteAssets }),
   
   // Execution actions
   setExecutionStatus: (status) => set({ executionStatus: status }),
@@ -162,34 +182,6 @@ export const useCodeArenaStore = create<CodeArenaState>()((set, get) => ({
     set({ outputs: new Map(), viewModes: new Map() })
   },
   
-  // View mode actions
-  setViewMode: (modelId, isPreview) => {
-    set((state) => {
-      const viewModes = new Map(state.viewModes)
-      viewModes.set(modelId, isPreview)
-      return { viewModes }
-    })
-  },
-  
-  toggleViewMode: (modelId) => {
-    set((state) => {
-      const viewModes = new Map(state.viewModes)
-      const current = viewModes.get(modelId) ?? true
-      viewModes.set(modelId, !current)
-      return { viewModes }
-    })
-  },
-  
-  setAllViewModes: (isPreview) => {
-    set((state) => {
-      const viewModes = new Map(state.viewModes)
-      for (const modelId of viewModes.keys()) {
-        viewModes.set(modelId, isPreview)
-      }
-      return { viewModes }
-    })
-  },
-  
   // Reset action
   reset: () => {
     const { abortController } = get()
@@ -204,6 +196,12 @@ export const useCodeArenaStore = create<CodeArenaState>()((set, get) => ({
       parameters: defaultParameters,
       judgeEnabled: false,
       judgeModelId: null,
+      stage: 'configure',
+      configOpen: true,
+      viewMode: 'preview',
+      viewport: 'desktop',
+      revealModels: false,
+      allowRemoteAssets: false,
       executionStatus: 'idle',
       currentRunId: null,
       abortController: null,

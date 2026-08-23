@@ -1,6 +1,7 @@
 import type {
   BenchmarkExportDocument,
   ModelExportRow,
+  ShareImageDitherAssets,
   ShareImagePreset,
   ShareImageTheme,
   ShareImageVariant,
@@ -127,6 +128,20 @@ function absoluteAssetUrl(assetUrl: string): string {
 
 function appIconMark(x: number, y: number, size: number): string {
   return `<image href="${escapeXml(absoluteAssetUrl(appIconUrl))}" x="${x}" y="${y}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet" />`
+}
+
+function ditherImage(
+  source: string | undefined,
+  kind: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  opacity = 1,
+  preserveAspectRatio = 'none',
+): string {
+  if (!source || width <= 0 || height <= 0) return ''
+  return `<image data-dither-asset="${kind}" href="${escapeXml(source)}" x="${x}" y="${y}" width="${width}" height="${height}" opacity="${opacity}" preserveAspectRatio="${preserveAspectRatio}" />`
 }
 
 function liquidBar(
@@ -275,6 +290,7 @@ function classicHeroPanel(
   width: number,
   height: number,
   palette: typeof SOCIAL_PALETTES.dark,
+  assets?: ShareImageDitherAssets,
 ): string {
   const top = document.summary.topModel
   if (!top) return ''
@@ -304,6 +320,7 @@ function classicHeroPanel(
       <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="24" fill="${palette.panel}" stroke="url(#socialAccent)" stroke-opacity="0.74" stroke-width="2" />
       <rect x="${x + 2}" y="${y + 2}" width="${width - 4}" height="${height - 4}" rx="22" fill="url(#leaderRowWash)" opacity="0.34" />
       <rect x="${x + 1}" y="${y + 1}" width="${width - 2}" height="${Math.max(1, height * 0.32)}" rx="23" fill="url(#rowSheen)" opacity="0.18" />
+      ${ditherImage(assets?.avatars?.[top.modelId], 'top-model-avatar', x + width - 84, y + 22, 50, 50, 1, 'xMidYMid meet')}
       ${text('TOP EFFECTIVE SCORE', x + 34, y + 50, { size: 19, weight: 900, fill: palette.accent2, letterSpacing: 2 })}
       ${text(formatPercent(top.effectiveScore), x + 34, scoreY, { size: scoreSize, weight: 900, fill: palette.good })}
       <svg x="${x + 38}" y="${nameY - nameSize}" width="${Math.max(120, scoreAreaWidth)}" height="${nameSize + 12}" overflow="hidden">
@@ -329,6 +346,7 @@ function classicLeaderboardRows(
   gap: number,
   limit: number,
   palette: typeof SOCIAL_PALETTES.dark,
+  assets?: ShareImageDitherAssets,
 ): string {
   return document.modelRows.slice(0, limit).map((row, index) => {
     const rowY = y + index * (rowHeight + gap)
@@ -347,6 +365,7 @@ function classicLeaderboardRows(
     const labelWidth = Math.max(100, trackX - labelX - 24)
     const score = clamp(row.effectiveScore, 0, 1)
     const barWidth = score === 0 ? 0 : Math.max(6, score * trackWidth)
+    const avatarSize = clamp(rowHeight * 0.42, 24, 42)
 
     return `
       <g filter="${index === 0 ? 'url(#rowShadow)' : ''}">
@@ -355,6 +374,7 @@ function classicLeaderboardRows(
         <rect x="${x + 1}" y="${rowY + 1}" width="${width - 2}" height="${Math.max(1, rowHeight * 0.38)}" rx="13" fill="url(#rowSheen)" opacity="${index === 0 ? 0.2 : 0.12}" />
         <rect x="${x}" y="${rowY + 14}" width="5" height="${rowHeight - 28}" rx="2.5" fill="${index === 0 ? 'url(#socialAccent)' : palette.border}" opacity="${index === 0 ? 1 : 0.16}" />
         ${text(String(row.rank).padStart(2, '0'), x + 24, rowY + rowHeight * 0.61, { size: rankSize, weight: 900, fill: index === 0 ? palette.accent : palette.faint })}
+        ${ditherImage(assets?.avatars?.[row.modelId], `model-avatar-${row.rank}`, x + 56, rowY + (rowHeight - avatarSize) / 2, avatarSize, avatarSize, 1, 'xMidYMid meet')}
         <svg x="${labelX}" y="${rowY}" width="${labelWidth}" height="${rowHeight}" overflow="hidden">
           ${text(truncateToWidth(row.displayName, labelWidth, labelFontSize), 0, rowHeight * 0.42, { size: labelFontSize, weight: 600, fill: palette.text })}
           ${text(`${row.scoredCount}/${row.totalExpected} scored`, 1, rowHeight * 0.71, { size: subFontSize, weight: 800, fill: palette.muted })}
@@ -375,6 +395,7 @@ function classicLeaderboardPanel(
   height: number,
   limit: number,
   palette: typeof SOCIAL_PALETTES.dark,
+  assets?: ShareImageDitherAssets,
 ): string {
   const rows = document.modelRows.slice(0, limit)
   if (rows.length === 0) return ''
@@ -389,12 +410,12 @@ function classicLeaderboardPanel(
       <rect x="${x + 1}" y="${y + 1}" width="${width - 2}" height="${Math.max(1, height * 0.13)}" rx="21" fill="url(#rowSheen)" opacity="0.12" />
       ${text('RANKED MODELS', x + 28, y + 46, { size: 19, weight: 900, fill: palette.accent2, letterSpacing: 2 })}
       ${text('EFFECTIVE SCORE', x + width - 28, y + 46, { size: 13, weight: 900, fill: palette.muted, anchor: 'end', letterSpacing: 1 })}
-      ${classicLeaderboardRows(document, x + 18, rowTop, width - 36, rowHeight, gap, limit, palette)}
+      ${classicLeaderboardRows(document, x + 18, rowTop, width - 36, rowHeight, gap, limit, palette, assets)}
     </g>
   `
 }
 
-function generateClassicShareImageSvg(document: BenchmarkExportDocument): string {
+function generateClassicShareImageSvg(document: BenchmarkExportDocument, assets?: ShareImageDitherAssets): string {
   const { width, height } = PRESETS[document.options.imagePreset]
   const palette = SOCIAL_PALETTES[document.options.imageTheme]
   const padding = width >= 1400 ? 72 : 58
@@ -416,8 +437,8 @@ function generateClassicShareImageSvg(document: BenchmarkExportDocument): string
       const leaderWidth = width - leaderX - padding
 
       return `
-        ${classicHeroPanel(document, padding, bodyTop, heroWidth, panelHeight, palette)}
-        ${classicLeaderboardPanel(document, leaderX, bodyTop, leaderWidth, panelHeight, 4, palette)}
+        ${classicHeroPanel(document, padding, bodyTop, heroWidth, panelHeight, palette, assets)}
+        ${classicLeaderboardPanel(document, leaderX, bodyTop, leaderWidth, panelHeight, 4, palette, assets)}
       `
     }
 
@@ -427,8 +448,8 @@ function generateClassicShareImageSvg(document: BenchmarkExportDocument): string
     const rowLimit = isTall ? 6 : height >= 1200 ? 5 : 3
 
     return `
-      ${classicHeroPanel(document, padding, bodyTop, width - padding * 2, heroHeight, palette)}
-      ${classicLeaderboardPanel(document, padding, leaderY, width - padding * 2, leaderHeight, rowLimit, palette)}
+      ${classicHeroPanel(document, padding, bodyTop, width - padding * 2, heroHeight, palette, assets)}
+      ${classicLeaderboardPanel(document, padding, leaderY, width - padding * 2, leaderHeight, rowLimit, palette, assets)}
     `
   })()
 
@@ -437,6 +458,7 @@ function generateClassicShareImageSvg(document: BenchmarkExportDocument): string
     ${socialSvgDefs(document, palette)}
   </defs>
   <rect width="100%" height="100%" fill="${palette.bg}" />
+  ${ditherImage(assets?.gradient, 'gradient', 0, 0, width, Math.min(height * 0.42, 520), 0.5)}
   <rect width="100%" height="100%" fill="url(#socialGrid)" />
   <rect width="100%" height="100%" filter="url(#socialNoise)" opacity="${document.options.imageTheme === 'dark' ? 0.7 : 0.38}" />
   <rect x="${padding / 2}" y="${padding / 2}" width="${width - padding}" height="${height - padding}" rx="28" fill="none" stroke="${palette.border}" stroke-opacity="0.18" stroke-width="3" />
@@ -497,6 +519,7 @@ function renderSocialLeaderboard(
   height: number,
   padding: number,
   palette: typeof SOCIAL_PALETTES.dark,
+  assets?: ShareImageDitherAssets,
 ): string {
   const rows = document.modelRows.slice(0, height >= 1700 ? 6 : width >= 1400 ? 4 : 5)
   if (rows.length === 0) return socialEmptyState(width, height, padding, palette)
@@ -507,7 +530,7 @@ function renderSocialLeaderboard(
   const maxRowHeight = height >= 1700 ? 248 : height >= 1200 ? 154 : 142
   const rowHeight = clamp((availableHeight - gap * (rows.length - 1)) / rows.length, 92, maxRowHeight)
   const rowWidth = width - padding * 2
-  const labelX = padding + 110
+  const labelX = padding + 130
   const labelFontSize = width >= 1400 ? 24 : 21
   const trackX = padding + (width >= 1400 ? 520 : 430)
   const labelWidth = trackX - labelX - 32
@@ -535,6 +558,7 @@ function renderSocialLeaderboard(
           <rect x="${padding + 1}" y="${y + 1}" width="${rowWidth - 2}" height="${Math.max(1, rowHeight * 0.36)}" rx="15" fill="url(#rowSheen)" opacity="${index === 0 ? 0.24 : 0.13}" />
           <rect x="${padding}" y="${y + 18}" width="6" height="${rowHeight - 36}" rx="3" fill="${index === 0 ? 'url(#socialAccent)' : palette.border}" opacity="${index === 0 ? 1 : 0.18}" />
           ${text(String(row.rank).padStart(2, '0'), padding + 28, y + rowHeight * 0.62, { size: 40, weight: 900, fill: index === 0 ? palette.accent : palette.faint })}
+          ${ditherImage(assets?.avatars?.[row.modelId], `model-avatar-${row.rank}`, padding + 76, y + (rowHeight - 40) / 2, 40, 40, 1, 'xMidYMid meet')}
           <svg x="${labelX}" y="${y}" width="${labelWidth}" height="${rowHeight}" overflow="hidden">
             ${text(displayName, 0, rowHeight * 0.45, { size: labelFontSize, weight: 600, fill: palette.text })}
             ${text(`${row.scoredCount}/${row.totalExpected} scored`, 2, rowHeight * 0.72, { size: 18, weight: 700, fill: palette.muted })}
@@ -556,6 +580,7 @@ function renderSocialBars(
   height: number,
   padding: number,
   palette: typeof SOCIAL_PALETTES.dark,
+  assets?: ShareImageDitherAssets,
 ): string {
   const rows = document.modelRows.slice(0, width >= 1400 ? 6 : 5)
   if (rows.length === 0) return socialEmptyState(width, height, padding, palette)
@@ -577,6 +602,7 @@ function renderSocialBars(
     ${text(top ? truncate(top.displayName, width >= 1400 ? 38 : 29) : 'No model', width - padding, titleY + 52, { size: 18, weight: 600, fill: palette.muted, anchor: 'end', letterSpacing: 0 })}
     <rect x="${padding}" y="${chartTop}" width="${chartWidth}" height="${chartHeight}" rx="20" fill="${palette.panel}" stroke="${palette.border}" stroke-opacity="0.14" />
     <line x1="${padding + chartInset}" y1="${baselineY - 42}" x2="${width - padding - chartInset}" y2="${baselineY - 42}" stroke="${palette.border}" stroke-opacity="0.35" stroke-width="3" />
+    ${ditherImage(assets?.scoreBars, 'score-bars', padding + chartInset, chartTop + 10, plotWidth, chartHeight - 60)}
     ${rows.map((row, index) => {
       const x = padding + chartInset + index * (barWidth + gap)
       const usableHeight = chartHeight - 118
@@ -588,8 +614,8 @@ function renderSocialBars(
       const modelLabel = truncateToWidth(row.displayName, barWidth - 8, modelLabelSize)
       return `
         <g>
-          ${liquidBar(`bars-${row.modelId}-${row.rank}`, barX, barY, actualBarWidth, barHeight, 16, palette, { glow: index === 0, noiseOpacity: index === 0 ? 0.18 : 0.12, opacity: index === 0 ? 1 : 0.42 })}
-          ${index === 0 ? '' : `<rect x="${barX}" y="${barY}" width="${actualBarWidth}" height="${barHeight}" rx="16" fill="none" stroke="${palette.border}" stroke-opacity="0.12" />`}
+          ${assets?.scoreBars ? '' : liquidBar(`bars-${row.modelId}-${row.rank}`, barX, barY, actualBarWidth, barHeight, 16, palette, { glow: index === 0, noiseOpacity: index === 0 ? 0.18 : 0.12, opacity: index === 0 ? 1 : 0.42 })}
+          ${assets?.scoreBars || index === 0 ? '' : `<rect x="${barX}" y="${barY}" width="${actualBarWidth}" height="${barHeight}" rx="16" fill="none" stroke="${palette.border}" stroke-opacity="0.12" />`}
           ${text(formatPercent(row.effectiveScore, 0), x + barWidth / 2, barY - 20, { size: 24, weight: 900, fill: index === 0 ? palette.accent : palette.text, anchor: 'middle' })}
           ${text(modelLabel, x + barWidth / 2, baselineY + 16, { size: modelLabelSize, weight: 600, fill: palette.text, anchor: 'middle' })}
           ${text(`#${row.rank}`, x + barWidth / 2, baselineY + 44, { size: 16, weight: 800, fill: palette.muted, anchor: 'middle' })}
@@ -605,6 +631,7 @@ function renderSocialHero(
   height: number,
   padding: number,
   palette: typeof SOCIAL_PALETTES.dark,
+  assets?: ShareImageDitherAssets,
 ): string {
   const top = document.summary.topModel
   if (!top) return socialEmptyState(width, height, padding, palette)
@@ -627,6 +654,8 @@ function renderSocialHero(
 
   return `
     <rect x="${panelX}" y="${panelTop}" width="${panelWidth}" height="${panelHeight}" rx="26" fill="${palette.panel}" stroke="${palette.border}" stroke-opacity="0.16" />
+    ${ditherImage(assets?.avatars?.[top.modelId], 'top-model-avatar', panelX + panelWidth - 118, panelTop + 32, 72, 72, 1, 'xMidYMid meet')}
+    ${ditherImage(assets?.coverageDonut, 'coverage-donut', panelX + panelWidth - 210, panelTop + 112, 164, 164, 0.92, 'xMidYMid meet')}
     ${text('TOP EFFECTIVE SCORE', panelX + 38, panelTop + 58, { size: 22, weight: 900, fill: palette.accent2, letterSpacing: 2 })}
     ${text(formatPercent(top.effectiveScore), panelX + 38, heroY, { size: scoreSize, weight: 900, fill: palette.good })}
     ${text(truncate(top.displayName, isWide ? 35 : 31), panelX + 44, heroY + 62, { size: isWide ? 27 : 30, weight: 600, fill: palette.text })}
@@ -640,7 +669,8 @@ function renderSocialHero(
         <g>
           <rect x="${miniX}" y="${y - 42}" width="${miniWidth}" height="${miniRowHeight}" rx="14" fill="${palette.panel}" stroke="${palette.border}" stroke-opacity="0.12" />
           ${text(`#${row.rank}`, miniX + 22, y - 4, { size: isTall ? 28 : 24, weight: 900, fill: palette.faint })}
-          ${text(truncate(row.displayName, isWide ? 32 : isTall ? 36 : 26), miniX + 82, y - 6, { size: isTall ? 24 : 20, weight: 600, fill: palette.text })}
+          ${ditherImage(assets?.avatars?.[row.modelId], `model-avatar-${row.rank}`, miniX + 58, y - 32, 32, 32, 1, 'xMidYMid meet')}
+          ${text(truncate(row.displayName, isWide ? 32 : isTall ? 36 : 26), miniX + 104, y - 6, { size: isTall ? 24 : 20, weight: 600, fill: palette.text })}
           ${text(formatPercent(row.effectiveScore), miniX + miniWidth - 24, y - 6, { size: isTall ? 28 : 24, weight: 900, fill: palette.text, anchor: 'end' })}
         </g>
       `
@@ -665,6 +695,7 @@ function renderSocialH2h(
   height: number,
   padding: number,
   palette: typeof SOCIAL_PALETTES.dark,
+  assets?: ShareImageDitherAssets,
 ): string {
   const [left, right] = document.modelRows
   if (!left) return socialEmptyState(width, height, padding, palette)
@@ -719,6 +750,8 @@ function renderSocialH2h(
     ${text('HEAD TO HEAD', padding, topY - (isWide ? 26 : compactStack ? 30 : 42), { size: 22, weight: 900, fill: palette.accent2, letterSpacing: 2 })}
     <rect x="${leftX}" y="${topY}" width="${panelWidth}" height="${panelHeight}" rx="24" fill="${palette.panel}" stroke="${palette.accent}" stroke-width="3" />
     <rect x="${rightX}" y="${rightY}" width="${panelWidth}" height="${panelHeight}" rx="24" fill="${palette.panel}" stroke="${palette.border}" stroke-opacity="0.18" />
+    ${ditherImage(assets?.avatars?.[left.modelId], 'model-avatar-1', leftX + panelWidth - 104, topY + 28, 68, 68, 1, 'xMidYMid meet')}
+    ${ditherImage(assets?.avatars?.[fallback.modelId], 'model-avatar-2', rightX + panelWidth - 104, rightY + 28, 68, 68, 1, 'xMidYMid meet')}
     ${text('#01', leftX + 34, topY + 56, { size: 24, weight: 900, fill: palette.accent, letterSpacing: 2 })}
     ${text(truncate(left.displayName, isWide ? 28 : 32), leftX + 34, topY + panelNameOffset, { size: compactStack ? 24 : 27, weight: 600, fill: palette.text })}
     ${text(formatPercent(left.effectiveScore), leftX + 34, topY + panelScoreOffset, { size: panelScoreSize, weight: 900, fill: palette.good })}
@@ -751,14 +784,15 @@ function renderSocialVariant(
   height: number,
   padding: number,
   palette: typeof SOCIAL_PALETTES.dark,
+  assets?: ShareImageDitherAssets,
 ): string {
-  if (variant === 'bars') return renderSocialBars(document, width, height, padding, palette)
-  if (variant === 'hero') return renderSocialHero(document, width, height, padding, palette)
-  if (variant === 'h2h') return renderSocialH2h(document, width, height, padding, palette)
-  return renderSocialLeaderboard(document, width, height, padding, palette)
+  if (variant === 'bars') return renderSocialBars(document, width, height, padding, palette, assets)
+  if (variant === 'hero') return renderSocialHero(document, width, height, padding, palette, assets)
+  if (variant === 'h2h') return renderSocialH2h(document, width, height, padding, palette, assets)
+  return renderSocialLeaderboard(document, width, height, padding, palette, assets)
 }
 
-function generateSocialCardSvg(document: BenchmarkExportDocument): string {
+function generateSocialCardSvg(document: BenchmarkExportDocument, assets?: ShareImageDitherAssets): string {
   const { width, height } = PRESETS[document.options.imagePreset]
   const palette = SOCIAL_PALETTES[document.options.imageTheme]
   const padding = width >= 1400 ? 72 : 58
@@ -769,12 +803,13 @@ function generateSocialCardSvg(document: BenchmarkExportDocument): string {
     ${socialSvgDefs(document, palette)}
   </defs>
   <rect width="100%" height="100%" fill="${palette.bg}" />
+  ${ditherImage(assets?.gradient, 'gradient', 0, 0, width, Math.min(height * 0.42, 520), 0.5)}
   <rect width="100%" height="100%" fill="url(#socialGrid)" />
   <rect width="100%" height="100%" filter="url(#socialNoise)" opacity="${document.options.imageTheme === 'dark' ? 0.7 : 0.38}" />
   <rect x="${padding / 2}" y="${padding / 2}" width="${width - padding}" height="${height - padding}" rx="28" fill="none" stroke="${palette.border}" stroke-opacity="0.18" stroke-width="3" />
   <rect x="${padding}" y="${padding + 132}" width="${width - padding * 2}" height="7" fill="url(#socialAccent)" />
   ${socialTitle(document, width, padding, palette)}
-  ${renderSocialVariant(variant, document, width, height, padding, palette)}
+  ${renderSocialVariant(variant, document, width, height, padding, palette, assets)}
   ${socialFooter(document, width, height, padding, palette)}
 </svg>`
 }
@@ -783,16 +818,22 @@ export function getShareImageSize(preset: ShareImagePreset): { width: number; he
   return PRESETS[preset]
 }
 
-export function generateShareImageSvg(document: BenchmarkExportDocument): string {
+export function generateShareImageSvg(
+  document: BenchmarkExportDocument,
+  assets?: ShareImageDitherAssets,
+): string {
   if (document.options.imageTemplate === 'social-card') {
-    return generateSocialCardSvg(document)
+    return generateSocialCardSvg(document, assets)
   }
 
-  return generateClassicShareImageSvg(document)
+  return generateClassicShareImageSvg(document, assets)
 }
 
-export async function generateShareImagePng(exportDocument: BenchmarkExportDocument): Promise<Blob> {
-  const svg = generateShareImageSvg(exportDocument)
+export async function generateShareImagePng(
+  exportDocument: BenchmarkExportDocument,
+  assets?: ShareImageDitherAssets,
+): Promise<Blob> {
+  const svg = generateShareImageSvg(exportDocument, assets)
   const { width, height } = PRESETS[exportDocument.options.imagePreset]
   const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' })
   const url = URL.createObjectURL(blob)

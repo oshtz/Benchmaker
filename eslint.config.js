@@ -7,6 +7,8 @@ export default tseslint.config(
   {
     ignores: [
       'dist/**',
+      '.ds-sync/**',
+      'ds-bundle/**',
       'node_modules/**',
       'playwright-report/**',
       'src-tauri/target/**',

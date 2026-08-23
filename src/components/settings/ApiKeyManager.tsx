@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { clearOpenRouterClient, getOpenRouterClient } from '@/services/openrouter'
-import { clearStoredApiKey, loadStoredApiKey, saveStoredApiKey } from '@/services/secureApiKey'
+import { clearStoredApiKey, saveStoredApiKey } from '@/services/secureApiKey'
 import { useToast } from '@/components/ui/use-toast'
 
 export function ApiKeyManager() {
@@ -26,31 +26,8 @@ export function ApiKeyManager() {
   const { toast } = useToast()
 
   useEffect(() => {
-    let active = true
-
-    void loadStoredApiKey()
-      .then((storedKey) => {
-        if (!active || !storedKey) return
-        if (!useSettingsStore.getState().apiKey) {
-          setApiKey(storedKey)
-          setInputKey(storedKey)
-        }
-      })
-      .catch((error) => {
-        toast({
-          title: 'API Key Unavailable',
-          description:
-            error instanceof Error
-              ? error.message
-              : 'Failed to read the API key from the OS credential store',
-          variant: 'destructive',
-        })
-      })
-
-    return () => {
-      active = false
-    }
-  }, [setApiKey, toast])
+    setInputKey(apiKey)
+  }, [apiKey])
 
   const handleValidateAndSave = async () => {
     const trimmedKey = inputKey.trim()

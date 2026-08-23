@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Download, History, Trash2, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DitherButton } from '@/components/dither-kit/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -105,13 +106,15 @@ export function Results() {
           </Select>
 
           {currentRun && (
-            <Button
-              variant="outline"
+            <DitherButton
               onClick={() => setExportDialogOpen(true)}
+              color="green"
+              bloom="low"
+              className="inline-flex h-9 items-center justify-center gap-2 px-3"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4" />
               Export
-            </Button>
+            </DitherButton>
           )}
 
           {currentRunId && (

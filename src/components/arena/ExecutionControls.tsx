@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Play, Square, Repeat, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DitherButton } from '@/components/dither-kit/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -178,22 +179,25 @@ export function ExecutionControls({ testSuite }: ExecutionControlsProps) {
           Stop {totalRuns > 1 ? `(${currentRunIndex}/${totalRuns})` : ''}
         </Button>
       ) : (
-        <div className="flex items-center bg-brand-gradient rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 transition-all hover:-translate-y-[1px]">
-          <Button 
-            variant="ghost"
-            onClick={() => handleRun(1)} 
+        <div className="flex items-center gap-1">
+          <DitherButton
+            color="green"
+            bloom="low"
+            onClick={() => handleRun(1)}
             disabled={!canRun}
-            className="rounded-r-none hover:bg-white/10 hover:text-white text-white border-0"
+            className="inline-flex h-10 items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/25"
           >
-            <Play className="h-4 w-4 mr-2" />
+            <Play className="h-4 w-4" />
             Run Benchmark
-          </Button>
+          </DitherButton>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost"
+              <Button
+                variant="outline"
+                size="icon"
                 disabled={!canRun}
-                className="rounded-l-none hover:bg-white/10 hover:text-white text-white border-0 border-l border-white/20 px-2"
+                className="h-10 w-10"
+                aria-label="Choose run count"
               >
                 <ChevronDown className="h-4 w-4" />
               </Button>

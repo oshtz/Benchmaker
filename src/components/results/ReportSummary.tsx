@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { useRunStore } from '@/stores/runStore'
 import type { RunResult } from '@/types'
+import { DitherGradient } from '@/components/dither-kit/gradient'
 
 interface ReportSummaryProps {
   run: RunResult
@@ -74,7 +75,9 @@ export function ReportSummary({ run }: ReportSummaryProps) {
   return (
     <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-5">
       <Card className="relative overflow-hidden col-span-2 sm:col-span-1">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-1 overflow-hidden">
+          <DitherGradient from="blue" to="transparent" direction="right" opacity={0.55} />
+        </div>
         <CardHeader className="pb-2">
           <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
             Status
@@ -105,7 +108,7 @@ export function ReportSummary({ run }: ReportSummaryProps) {
           <div className="text-xl sm:text-2xl font-semibold">
             {typeof duration === 'string' ? duration : `${duration}s`}
           </div>
-          <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+          <p className="truncate text-xs text-muted-foreground">
             Started {new Date(run.startedAt).toLocaleTimeString()}
           </p>
         </CardContent>
@@ -130,11 +133,11 @@ export function ReportSummary({ run }: ReportSummaryProps) {
               </div>
             )}
           </div>
-          <p className="text-[10px] sm:text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {run.models.length} models × {Math.round(totalCount / run.models.length)} tests
           </p>
           {run.errorSummary && (
-            <p className="text-[10px] sm:text-xs text-rose-500 mt-1 line-clamp-2" title={run.errorSummary}>
+            <p className="mt-1 line-clamp-2 text-xs text-rose-500" title={run.errorSummary}>
               {run.errorSummary}
             </p>
           )}
@@ -175,7 +178,7 @@ export function ReportSummary({ run }: ReportSummaryProps) {
             {formatCost(totalCost)}
           </div>
           {sortedByCost.length > 0 && (
-            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+            <p className="truncate text-xs text-muted-foreground">
               Cheapest: {sortedByCost[0][0].split('/').pop()} ({formatCost(sortedByCost[0][1])})
             </p>
           )}

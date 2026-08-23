@@ -1,12 +1,10 @@
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { basename, join } from 'node:path'
-import { execFileSync } from 'node:child_process'
 
 const root = process.cwd()
 const strict = process.argv.includes('--strict')
 const requirePortable = process.argv.includes('--require-portable')
-const requireSigning = process.argv.includes('--require-signing')
 
 const failures = []
 const warnings = []
@@ -70,7 +68,8 @@ function checkVersionSync() {
 }
 
 function checkPackageScripts() {
-  const scripts = readJson('package.json').scripts ?? {}
+  const pkg = readJson('package.json')
+  const scripts = pkg.scripts ?? {}
   const required = [
     'lint',
     'typecheck',
@@ -78,7 +77,10 @@ function checkPackageScripts() {
     'test:e2e',
     'check',
     'build',
+    'prepare:ffmpeg',
+    'prepare:ffmpeg:universal-macos',
     'tauri:build',
+    'tauri:build:universal-macos',
     'release:preflight',
   ]
 
@@ -89,6 +91,19 @@ function checkPackageScripts() {
       fail(`Missing npm script: ${script}`)
     }
   }
+
+  if (pkg.devDependencies?.['ffmpeg-static']) {
+    pass(`Bundled encoder dependency present: ffmpeg-static ${pkg.devDependencies['ffmpeg-static']}`)
+  } else {
+    fail('Missing bundled FFmpeg dependency: ffmpeg-static')
+  }
+
+  const tauri = readJson('src-tauri/tauri.conf.json')
+  if (tauri.tauri?.bundle?.externalBin?.includes('binaries/ffmpeg')) {
+    pass('Tauri bundle includes the FFmpeg sidecar')
+  } else {
+    fail('Tauri bundle is missing the FFmpeg sidecar')
+  }
 }
 
 function checkWorkflowContract() {
@@ -97,11 +112,17 @@ function checkWorkflowContract() {
 
   const requiredBuildSnippets = [
     'Benchmaker-Portable.exe.sha256',
-    'WINDOWS_CERTIFICATE',
-    'WINDOWS_CERTIFICATE_PASSWORD',
+    "tags: ['v*']",
+    'Verify portable is intentionally unsigned',
     'Benchmaker.app.zip.sha256',
     'Generate macOS checksums',
     'Verify notarization credentials',
+    'universal-apple-darwin',
+    'lipo -archs',
+    'notarytool submit',
+    'stapler staple',
+    'stapler validate',
+    'spctl --assess',
     'Cache Enigma Virtual Box installer',
     'EVB_INSTALLER_SHA256',
   ]
@@ -114,10 +135,28 @@ function checkWorkflowContract() {
     }
   }
 
+  const forbiddenBuildSnippets = [
+    'WINDOWS_CERTIFICATE',
+    'WINDOWS_CERTIFICATE_PASSWORD',
+    'signtool',
+    'bundle/msi',
+    'bundle/nsis',
+    'refs/heads/main',
+  ]
+
+  for (const snippet of forbiddenBuildSnippets) {
+    if (buildWorkflow.includes(snippet)) {
+      fail(`build workflow violates release contract with: ${snippet}`)
+    } else {
+      pass(`build workflow excludes: ${snippet}`)
+    }
+  }
+
   const requiredQualitySnippets = [
     'npm run lint',
     'npm run typecheck',
     'npm test',
+    'npm run prepare:ffmpeg',
     'cargo test --manifest-path src-tauri/Cargo.toml',
     'npm run build',
     'npm run test:e2e',
@@ -169,43 +208,9 @@ function checkChecksumSidecar(path, { required = false } = {}) {
   }
 }
 
-function checkWindowsSignature(path) {
-  if (process.platform !== 'win32' || !fileExists(path)) return
-
-  try {
-    const output = execFileSync(
-      'powershell',
-      [
-        '-NoProfile',
-        '-ExecutionPolicy',
-        'Bypass',
-        '-Command',
-        `(Get-AuthenticodeSignature -LiteralPath '${join(root, path).replaceAll("'", "''")}').Status`,
-      ],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
-    ).trim()
-
-    if (output === 'Valid') {
-      pass(`Authenticode signature valid: ${path}`)
-    } else {
-      const message = `Authenticode signature status for ${path}: ${output || 'Unknown'}`
-      requireSigning ? fail(message) : warn(message)
-    }
-  } catch (error) {
-    const message = `Unable to inspect Authenticode signature for ${path}: ${error.message}`
-    requireSigning ? fail(message) : warn(message)
-  }
-}
-
-function checkArtifacts(version) {
+function checkArtifacts() {
   const releaseExe = 'src-tauri/target/release/Benchmaker.exe'
   checkArtifact(releaseExe, { minBytes: 1024 * 1024, required: false })
-  checkWindowsSignature(releaseExe)
-
-  const msiPath = `src-tauri/target/release/bundle/msi/Benchmaker_${version}_x64_en-US.msi`
-  const nsisPath = `src-tauri/target/release/bundle/nsis/Benchmaker_${version}_x64-setup.exe`
-  checkArtifact(msiPath, { minBytes: 1024 * 1024, required: false })
-  checkArtifact(nsisPath, { minBytes: 1024 * 1024, required: false })
 
   const portablePath = 'src-tauri/target/release/Benchmaker-Portable.exe'
   const portablePresent = checkArtifact(portablePath, {
@@ -214,15 +219,16 @@ function checkArtifacts(version) {
   })
   if (portablePresent) {
     checkChecksumSidecar(portablePath, { required: true })
-    checkWindowsSignature(portablePath)
   }
 
-  const macZip = 'src-tauri/target/release/bundle/macos/Benchmaker.app.zip'
+  const macReleaseRoot = 'src-tauri/target/universal-apple-darwin/release/bundle'
+  const macZip = `${macReleaseRoot}/macos/Benchmaker.app.zip`
   if (checkArtifact(macZip, { minBytes: 1024 * 1024, required: false })) {
     checkChecksumSidecar(macZip, { required: true })
   }
 
-  const dmgs = findFiles('src-tauri/target/release/bundle/dmg', (name) => name.endsWith('.dmg'))
+  const dmgs = findFiles(`${macReleaseRoot}/dmg`, (name) => name.endsWith('.dmg'))
+  if (dmgs.length === 0) warn(`Artifact missing: ${macReleaseRoot}/dmg/*.dmg`)
   for (const dmg of dmgs) {
     checkArtifact(dmg, { minBytes: 1024 * 1024, required: false })
     checkChecksumSidecar(dmg, { required: true })
@@ -237,10 +243,10 @@ function printSection(title, rows) {
   }
 }
 
-const version = checkVersionSync()
+checkVersionSync()
 checkPackageScripts()
 checkWorkflowContract()
-checkArtifacts(version)
+checkArtifacts()
 
 printSection('PASS', passes)
 printSection('WARN', warnings)

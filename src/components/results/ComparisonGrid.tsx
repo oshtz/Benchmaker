@@ -2,6 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
+import { DitherAvatar } from '@/components/dither-kit/avatar'
+import { ditherHueForName } from '@/lib/dither'
 import { useTestSuiteStore } from '@/stores/testSuiteStore'
 import { ResponseCell } from './ResponseCell'
 import type { RunResult } from '@/types'
@@ -203,8 +205,15 @@ export function ComparisonGrid({ run }: ComparisonGridProps) {
                   className="relative shrink-0 p-2 sm:p-3 font-medium border-r border-border/70 text-center text-sm sm:text-base"
                   style={{ width: getColumnWidth(idx + 1) }}
                 >
-                  <span className="truncate block">
-                    {modelId.split('/').pop()}
+                  <span className="flex min-w-0 items-center justify-center gap-2">
+                    <DitherAvatar
+                      name={modelId}
+                      hue={ditherHueForName(modelId)}
+                      size={24}
+                      animate={false}
+                      className="shrink-0 rounded-sm"
+                    />
+                    <span className="truncate">{modelId.split('/').pop()}</span>
                   </span>
                   <ColumnResizeHandle columnIndex={idx + 1} />
                 </div>
@@ -277,7 +286,7 @@ export function ComparisonGrid({ run }: ComparisonGridProps) {
                     <div className="bg-muted/20">
                       {/* Prompt */}
                       <div className="p-3 sm:p-4 border-b border-border/60">
-                        <div className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-1">
+                        <div className="mb-1 text-xs font-medium text-muted-foreground">
                           Prompt
                         </div>
                         <div className="text-xs sm:text-sm whitespace-pre-wrap">
@@ -285,7 +294,7 @@ export function ComparisonGrid({ run }: ComparisonGridProps) {
                         </div>
                         {testCase.expectedOutput && (
                           <div className="mt-2">
-                            <div className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-1">
+                            <div className="mb-1 text-xs font-medium text-muted-foreground">
                               Expected Output
                             </div>
                             <div className="text-xs sm:text-sm font-mono bg-background/70 p-2 rounded-lg border border-border/60">

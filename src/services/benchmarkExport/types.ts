@@ -15,6 +15,13 @@ export type ShareImageTemplate = 'classic' | 'social-card'
 export type ShareImageVariant = 'leaderboard' | 'bars' | 'hero' | 'h2h'
 export type ShareImageTheme = 'dark' | 'light'
 
+export interface ShareImageDitherAssets {
+  scoreBars?: string
+  coverageDonut?: string
+  gradient?: string
+  avatars?: Record<string, string>
+}
+
 export interface BenchmarkExportOptions {
   mode: ExportMode
   imagePreset: ShareImagePreset
