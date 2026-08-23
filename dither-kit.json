@@ -1,0 +1,102 @@
+{
+  "$schema": "https://tripwire.sh/schema/dither-kit.json",
+  "lockfileVersion": 1,
+  "registry": "https://tripwire.sh/r/registry.json",
+  "mode": "source",
+  "components": {
+    "avatar": {
+      "version": "0.1.0",
+      "hash": "sha256:e2d8cda492be74ef48b4b1b140da1f7429ede5e9fb3808323e0aa0cf722270fe",
+      "files": [
+        { "path": "src/components/dither-kit/avatar.tsx", "hash": "sha256:fb95176426a254f08f833421f66afc20a584667aa5e6b0d173477b91eaa112d9" },
+        { "path": "src/components/dither-kit/lib.ts", "hash": "sha256:41493601eb53a70f7629f6e50bad233f7185eaad42ba2397ca56ac1afcf1bb5f" },
+        { "path": "src/components/dither-kit/palette.ts", "hash": "sha256:fd020c230ad818a5d9d6dfdfcb6ef50b0dba012c77f44f1a61449fc9a65947f7" },
+        { "path": "src/components/dither-kit/pixel.ts", "hash": "sha256:02b3549fd9a9ec28508e57cea6012e2406dea3d016d2b9a30b6a29312fe334f0" }
+      ]
+    },
+    "area-chart": {
+      "version": "0.1.0",
+      "hash": "sha256:2bd6d48ac4d29424201d3a209e9b10fa675976c5b5f291dc0a7854448733295b",
+      "files": [
+        { "path": "src/components/dither-kit/area-chart.tsx", "hash": "sha256:f99c65468038594056bddf75f687c91a7052b49de233ca33746ad7897c38789d" },
+        { "path": "src/components/dither-kit/area.tsx", "hash": "sha256:4997e9f05b6a4341e1e158fad96af208eb8c11311e99f4cb41224fe5168d1a69" },
+        { "path": "src/components/dither-kit/cartesian-canvas.tsx", "hash": "sha256:180a1525cbe10ec35bc79f689bd018cfdf115ebb4e1e6b1ff31d4bd37ecc6f09" },
+        { "path": "src/components/dither-kit/sparkline.tsx", "hash": "sha256:b5dab0b68af7ebc976ec51a74776761ac26d79f4aacd9c453a6e79c49e8d11ff" }
+      ]
+    },
+    "bar-chart": {
+      "version": "0.1.0",
+      "hash": "sha256:1551052a0fbfafdfada3dec5129a4d363e3b93689eb304df88f45b8332af6696",
+      "files": [
+        { "path": "src/components/dither-kit/bar-canvas.tsx", "hash": "sha256:80ed40b87eb3dbf3d9f768cf42b3b55f4f738db8b193c1a616f7abf525d83f87" },
+        { "path": "src/components/dither-kit/bar-chart.tsx", "hash": "sha256:975836908ad87570a4e2ec3deafe8986309307f97deaf081c0a433fa66ba3173" },
+        { "path": "src/components/dither-kit/bar.tsx", "hash": "sha256:7b1ac913c431ddd83a1913c785842684b37fcdbec2a540a4d637035fb49a9c3c" }
+      ]
+    },
+    "button": {
+      "version": "0.1.0",
+      "hash": "sha256:e1c3d7c439c1173a7ddcba73583b87d100409f14940d91939ea3167dd3a80d18",
+      "files": [
+        { "path": "src/components/dither-kit/button.tsx", "hash": "sha256:a6c652e6fde63e79be1b1e5fc62cdfab446841a061b26d38d44eed5595f5bd51" },
+        { "path": "src/components/dither-kit/lib.ts", "hash": "sha256:41493601eb53a70f7629f6e50bad233f7185eaad42ba2397ca56ac1afcf1bb5f" },
+        { "path": "src/components/dither-kit/palette.ts", "hash": "sha256:fd020c230ad818a5d9d6dfdfcb6ef50b0dba012c77f44f1a61449fc9a65947f7" },
+        { "path": "src/components/dither-kit/pixel.ts", "hash": "sha256:02b3549fd9a9ec28508e57cea6012e2406dea3d016d2b9a30b6a29312fe334f0" }
+      ]
+    },
+    "core": {
+      "version": "0.1.0",
+      "hash": "sha256:87198bf572b5d745665ed5d064ffb51e409c823c3588a2474e3465a81d27769a",
+      "files": [
+        { "path": "src/components/dither-kit/block-legend.tsx", "hash": "sha256:4ddf215c6187ac0ca2640501c0342699bc210b33c1cec1d3e138ee3d38f77433" },
+        { "path": "src/components/dither-kit/cartesian-root.tsx", "hash": "sha256:6b5297d75de22ae5a0fc1960bef0419a4984b54ff493e7acd527aa0ccb150098" },
+        { "path": "src/components/dither-kit/chart-context.tsx", "hash": "sha256:955657f21fdbf7e04b80917be52b7c3839eb535b8d07f15053c06d9320683d8f" },
+        { "path": "src/components/dither-kit/common-context.tsx", "hash": "sha256:14a2360ecfcb08a7d2a7ef1c65c262774415164872f6c40dee928960e9b7fcad" },
+        { "path": "src/components/dither-kit/dither-paint.ts", "hash": "sha256:e1f21245229a3b3de2937ce8d3b873ed4b1f5170cbbcf8ab1bb701b3b45d1746" },
+        { "path": "src/components/dither-kit/dot.tsx", "hash": "sha256:207bf90662237064940d14a4d8411135d75027b97a9582c0e61c8af74ea5d65a" },
+        { "path": "src/components/dither-kit/grid.tsx", "hash": "sha256:ad09d80b3898a4d3f588ff1f2f4f82984864c3918cb09d31350be6ac18d2446f" },
+        { "path": "src/components/dither-kit/legend.tsx", "hash": "sha256:31852c60fde4e31cf38c9b72601f00671d15f5012d05acf4ef140dfccdc785e2" },
+        { "path": "src/components/dither-kit/lib.ts", "hash": "sha256:41493601eb53a70f7629f6e50bad233f7185eaad42ba2397ca56ac1afcf1bb5f" },
+        { "path": "src/components/dither-kit/palette.ts", "hash": "sha256:fd020c230ad818a5d9d6dfdfcb6ef50b0dba012c77f44f1a61449fc9a65947f7" },
+        { "path": "src/components/dither-kit/polar-context.tsx", "hash": "sha256:e3f12e19c883678962d7b83cc8eaa7118a75e7c08d9d9a7178e299e0d0716f8c" },
+        { "path": "src/components/dither-kit/polar-root.tsx", "hash": "sha256:66782492fdd0bd1a04eb469b9b3c3b704b1828ed11b24b3553097887ebe49a70" },
+        { "path": "src/components/dither-kit/polar.ts", "hash": "sha256:99de1d073790fd3c1567355848dae3c4c2a5cf30af805dc610eb717ad0ffc874" },
+        { "path": "src/components/dither-kit/reference-line.tsx", "hash": "sha256:aab768afa781281025a5cd4355b631899c1128090a9f26bf4cc839e7005955e2" },
+        { "path": "src/components/dither-kit/scales.ts", "hash": "sha256:bcb34da791195bee6c1ac2529ad64a66939084bf92e12db4d0c115a101ff552c" },
+        { "path": "src/components/dither-kit/series-context.tsx", "hash": "sha256:1802f1f488cc46542294f533c55fae03a4b067feca0761df75ce21de8a6a429a" },
+        { "path": "src/components/dither-kit/tooltip.tsx", "hash": "sha256:dcd9d750fe0ecba43595bdb2dfd5ec48b76a194e5ee73a3471be1ad8426927aa" },
+        { "path": "src/components/dither-kit/use-chart-dimensions.ts", "hash": "sha256:74b7f2a08cce5b891348eed845fc8c218ed16fce362ef4f35587ec4cc864c834" },
+        { "path": "src/components/dither-kit/x-axis.tsx", "hash": "sha256:7997bd96c341816a0f1cc6f966ad386fedc78be39e51201fa368dab1fd943d62" },
+        { "path": "src/components/dither-kit/y-axis.tsx", "hash": "sha256:56a53597a0160f53e0a3949511aa2fffd4613b9c795581ec7f71376efd4ed383" }
+      ]
+    },
+    "gradient": {
+      "version": "0.1.0",
+      "hash": "sha256:605912215cd2b70e6535ba9ee822725800dc9526bf2823481368158f8b1095d4",
+      "files": [
+        { "path": "src/components/dither-kit/gradient.tsx", "hash": "sha256:c5cfeaff9b5cfe88cf963109c679dc8202d2543d277e11c346f8d02c2a67dfcd" },
+        { "path": "src/components/dither-kit/lib.ts", "hash": "sha256:41493601eb53a70f7629f6e50bad233f7185eaad42ba2397ca56ac1afcf1bb5f" },
+        { "path": "src/components/dither-kit/palette.ts", "hash": "sha256:fd020c230ad818a5d9d6dfdfcb6ef50b0dba012c77f44f1a61449fc9a65947f7" },
+        { "path": "src/components/dither-kit/pixel.ts", "hash": "sha256:02b3549fd9a9ec28508e57cea6012e2406dea3d016d2b9a30b6a29312fe334f0" }
+      ]
+    },
+    "pie-chart": {
+      "version": "0.1.0",
+      "hash": "sha256:5dd06c378b6b699ec80a1523c357b5458adebad04a261514da502ac1fb943d94",
+      "files": [
+        { "path": "src/components/dither-kit/pie-canvas.tsx", "hash": "sha256:3e794299c8239f33169ee092f4761003ad6ce5d51a613550eea8a75fd02100f0" },
+        { "path": "src/components/dither-kit/pie-chart.tsx", "hash": "sha256:2dae2f8e6193e0bca31164ba7d7b829cc5295533cdb207783d6bdb4e346d2c13" },
+        { "path": "src/components/dither-kit/pie.tsx", "hash": "sha256:1e44525a3119913b042b660be50c9c2c0e34a265ee8ed0aa32c65ce4ce9fd655" }
+      ]
+    },
+    "radar-chart": {
+      "version": "0.1.0",
+      "hash": "sha256:dda44aeb573f6132a2ca91f5144cc9a522b6d4818a0dbfbaf21061223f12d968",
+      "files": [
+        { "path": "src/components/dither-kit/radar-canvas.tsx", "hash": "sha256:e744f1edb1b17ba82eaa997f8fcc5e23e16d7cb1e74d768610162376dc3c1712" },
+        { "path": "src/components/dither-kit/radar-chart.tsx", "hash": "sha256:b62686351465de7d14cf4d919938e005691e8363d45ac8e625cb863a4ad421db" },
+        { "path": "src/components/dither-kit/radar-frame.tsx", "hash": "sha256:589910f301d1953b131991f3e921a733f2c762f9dea74f3a220da206f45acf59" },
+        { "path": "src/components/dither-kit/radar.tsx", "hash": "sha256:f55dae75073cef3eab55ede93a5fa394711a9c5736046236ebd11623d02849e9" }
+      ]
+    }
+  }
+}

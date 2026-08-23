@@ -12,6 +12,7 @@ export type {
   BenchmarkExportOptions,
   ExportMode,
   ShareImagePreset,
+  ShareImageDitherAssets,
   ShareImageTemplate,
   ShareImageTheme,
   ShareImageVariant,

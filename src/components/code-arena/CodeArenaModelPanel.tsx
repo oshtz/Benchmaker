@@ -1,6 +1,8 @@
 import { AlertCircle, Clock, DollarSign } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { DitherAvatar } from '@/components/dither-kit/avatar'
+import { ditherHueForName } from '@/lib/dither'
 import { CodePreviewPanel } from './CodePreviewPanel'
 import { CodeEditorView } from './CodeEditorView'
 import type { CodeArenaOutput, CodeArenaViewMode, CodeArenaViewport } from '@/types'
@@ -9,12 +11,13 @@ interface Props { modelId: string; anonymousLabel: string; revealModel: boolean;
 
 export function CodeArenaModelPanel({ modelId, anonymousLabel, revealModel, output, viewMode, viewport }: Props) {
   const name = revealModel ? modelId.split('/').pop() || modelId : anonymousLabel
+  const avatarSeed = revealModel ? modelId : anonymousLabel
   const displayCode = output?.status === 'running' ? '' : output?.extractedCode || ''
   const report = output?.runtimeReport
   const status = output?.status ?? 'idle'
   return <Card className="flex min-h-[360px] flex-col overflow-hidden">
     <CardHeader className="shrink-0 border-b px-3 py-2">
-      <div className="flex items-center justify-between gap-2"><CardTitle className="truncate text-sm" title={revealModel ? modelId : name}>{name}</CardTitle><div className="flex items-center gap-2"><Badge variant={status === 'failed' ? 'destructive' : status === 'completed' ? 'default' : 'secondary'}>{status === 'completed' ? 'Done' : status}</Badge>{output?.rubricScores && <Badge>{Math.round(output.rubricScores.total)}%</Badge>}</div></div>
+      <div className="flex items-center justify-between gap-2"><div className="flex min-w-0 items-center gap-2"><DitherAvatar name={avatarSeed} hue={ditherHueForName(avatarSeed)} size={24} animate={false} className="shrink-0 rounded-sm" /><CardTitle className="truncate text-sm" title={revealModel ? modelId : name}>{name}</CardTitle></div><div className="flex items-center gap-2"><Badge variant={status === 'failed' ? 'destructive' : status === 'completed' ? 'default' : 'secondary'}>{status === 'completed' ? 'Done' : status}</Badge>{output?.rubricScores && <Badge>{Math.round(output.rubricScores.total)}%</Badge>}</div></div>
       <div className="mt-1 flex gap-3 text-xs text-muted-foreground">{output?.latencyMs ? <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{(output.latencyMs / 1000).toFixed(1)}s</span> : null}{output?.cost ? <span className="flex items-center gap-1"><DollarSign className="h-3 w-3" />${output.cost.toFixed(4)}</span> : null}<span>{viewport === 'desktop' ? '1440×900' : '390×844'}</span></div>
     </CardHeader>
     <CardContent className="flex flex-1 min-h-0 items-stretch justify-center p-0">

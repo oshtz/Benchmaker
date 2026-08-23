@@ -1,6 +1,7 @@
 import { type LucideIcon } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card'
 import { cn } from '@/lib/utils'
+import { DitherGradient } from '@/components/dither-kit/gradient'
 
 interface Step {
   number: number
@@ -36,8 +37,8 @@ export function EmptyState({
 
   return (
     <Card className={cn('max-w-2xl mx-auto relative overflow-hidden', className)}>
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-      <CardHeader className="text-center pb-2 space-y-3">
+      <DitherGradient from="green" to="transparent" direction="down" cell={4} opacity={0.28} />
+      <CardHeader className="relative z-10 text-center pb-2 space-y-3">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10 shadow-sm">
           <Icon className={cn('h-8 w-8', iconColors[variant])} />
         </div>
@@ -48,7 +49,7 @@ export function EmptyState({
       </CardHeader>
 
       {steps && steps.length > 0 && (
-        <CardContent className="pt-2">
+        <CardContent className="relative z-10 pt-2">
           <div className="space-y-3">
             {steps.map((step) => (
               <div
@@ -90,7 +91,7 @@ export function EmptyState({
       )}
 
       {action && (
-        <CardContent className={cn('flex justify-center', steps ? 'pt-2' : 'pt-0')}>
+        <CardContent className={cn('relative z-10 flex justify-center', steps ? 'pt-2' : 'pt-0')}>
           {action}
         </CardContent>
       )}

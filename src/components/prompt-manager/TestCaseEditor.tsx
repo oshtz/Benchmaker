@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { DitherButton } from '@/components/dither-kit/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -269,9 +270,9 @@ export function TestCaseEditor({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!prompt.trim()}>
+          <DitherButton color="green" onClick={handleSave} disabled={!prompt.trim()}>
             {testCase ? 'Save Changes' : 'Add Test Case'}
-          </Button>
+          </DitherButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

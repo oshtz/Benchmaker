@@ -239,4 +239,36 @@ describe('benchmark export document', () => {
     expect(svg).toContain('MATH &lt;SUITE&gt;')
     expect(svg).not.toContain('What is 2 + 2?')
   })
+
+  it('embeds captured Dither Kit layers in the full share image', () => {
+    const document = buildBenchmarkExportDocument({
+      run,
+      testSuites: [suite],
+      allRuns: [run],
+      options: {
+        ...options,
+        mode: 'share-image',
+        imageTemplate: 'social-card',
+        imageVariant: 'bars',
+      },
+      generatedAt: 10_000,
+    })
+    const assets = {
+      gradient: 'data:image/png;base64,Z3JhZGllbnQ=',
+      scoreBars: 'data:image/png;base64,YmFycw==',
+      coverageDonut: 'data:image/png;base64,ZG9udXQ=',
+      avatars: { 'provider/model-a': 'data:image/png;base64,YXZhdGFy' },
+    }
+
+    const barsSvg = generateShareImageSvg(document, assets)
+    const heroSvg = generateShareImageSvg({
+      ...document,
+      options: { ...document.options, imageVariant: 'hero' },
+    }, assets)
+
+    expect(barsSvg).toContain('data-dither-asset="gradient"')
+    expect(barsSvg).toContain('data-dither-asset="score-bars"')
+    expect(heroSvg).toContain('data-dither-asset="top-model-avatar"')
+    expect(heroSvg).toContain('data-dither-asset="coverage-donut"')
+  })
 })

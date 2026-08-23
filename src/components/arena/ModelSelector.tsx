@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Checkbox } from '@/components/ui/checkbox'
+import { DitherAvatar } from '@/components/dither-kit/avatar'
+import { ditherHueForName } from '@/lib/dither'
 import { useModelStore } from '@/stores/modelStore'
 import { useCodeArenaStore } from '@/stores/codeArenaStore'
 
@@ -305,6 +307,13 @@ export function ModelSelector({ useCodeArenaStore: useCodeArena = false }: Model
                   onClick={() => toggleModelSelection(model.id)}
                 >
                   <Checkbox checked={isSelected} />
+                  <DitherAvatar
+                    name={model.id}
+                    hue={ditherHueForName(model.id)}
+                    size={36}
+                    animate={false}
+                    className="shrink-0 rounded-md"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <div className="font-medium truncate">{model.name}</div>

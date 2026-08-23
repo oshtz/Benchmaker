@@ -9,6 +9,7 @@ import { DataManager } from '@/components/data/DataManager'
 import appWhite from '/app-white.png'
 import appBlack from '/app-black.png'
 import logoBlack from '/logo-black.png'
+import { DitherGradient } from '@/components/dither-kit/gradient'
 
 const tabs = [
   { value: 'prompts', label: 'Prompts', Icon: FileText },
@@ -25,6 +26,7 @@ export function MainNavigationRail() {
 
   return (
     <aside className="relative z-20 flex h-full w-[68px] shrink-0 flex-col overflow-hidden border-r border-border/50 bg-background/75 backdrop-blur-2xl transition-[width] duration-300 min-[1180px]:w-56">
+      <DitherGradient from="blue" to="purple" direction="down" cell={3} opacity={0.08} className="z-0" />
       <div className="absolute inset-y-0 right-0 z-20 w-px bg-gradient-to-b from-primary/50 via-border to-transparent" />
       <div className="relative z-10 flex h-16 shrink-0 items-center justify-center border-b border-border/40 px-3 min-[1180px]:justify-start min-[1180px]:gap-3 min-[1180px]:px-4">
         <img src={appWhite} alt="" className="hidden h-9 w-auto shrink-0 rounded-[9px] shadow-sm dark:block" />

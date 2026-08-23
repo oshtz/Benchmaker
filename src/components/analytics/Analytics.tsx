@@ -16,9 +16,20 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Area } from '@/components/dither-kit/area'
+import { AreaChart } from '@/components/dither-kit/area-chart'
+import { DitherAvatar } from '@/components/dither-kit/avatar'
+import { DitherGradient } from '@/components/dither-kit/gradient'
+import { Grid } from '@/components/dither-kit/grid'
+import { Pie } from '@/components/dither-kit/pie'
+import { PieChart } from '@/components/dither-kit/pie-chart'
+import { Sparkline } from '@/components/dither-kit/sparkline'
+import { Tooltip } from '@/components/dither-kit/tooltip'
+import { XAxis } from '@/components/dither-kit/x-axis'
+import { YAxis } from '@/components/dither-kit/y-axis'
+import { ditherHueForName } from '@/lib/dither'
 import {
   Select,
   SelectContent,
@@ -211,6 +222,19 @@ function Leaderboard({ analytics }: { analytics: AnalyticsData }) {
     return analytics.categoryLeaderboards.get(selectedCategory) || []
   }, [selectedCategory, analytics])
 
+  const modelTrends = useMemo(() => {
+    const trends = new Map<string, number[]>()
+    for (const entry of analytics.overallLeaderboard) {
+      trends.set(
+        entry.modelId,
+        analytics.timeSeriesData
+          .map((point) => point.modelScores.get(entry.modelId))
+          .filter((value): value is number => typeof value === 'number'),
+      )
+    }
+    return trends
+  }, [analytics.overallLeaderboard, analytics.timeSeriesData])
+
   if (analytics.overallLeaderboard.length === 0) {
     return null
   }
@@ -249,9 +273,9 @@ function Leaderboard({ analytics }: { analytics: AnalyticsData }) {
           {leaderboard.map((entry) => (
             <div
               key={entry.modelId}
-              className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
+              className={`relative isolate flex items-center gap-4 overflow-hidden rounded-lg p-3 transition-colors ${
                 entry.rank === 1
-                  ? 'bg-yellow-500/10 border border-yellow-500/20'
+                  ? 'border border-primary/25 bg-primary/5'
                   : entry.rank === 2
                   ? 'bg-gray-500/10 border border-gray-500/20'
                   : entry.rank === 3
@@ -259,10 +283,20 @@ function Leaderboard({ analytics }: { analytics: AnalyticsData }) {
                   : 'bg-muted/50'
               }`}
             >
-              <div className="w-8 flex justify-center">
+              {entry.rank === 1 && (
+                <DitherGradient from="green" to="transparent" direction="right" cell={4} opacity={0.2} />
+              )}
+              <div className="relative z-10 w-8 flex justify-center">
                 {getRankBadge(entry.rank)}
               </div>
-              <div className="flex-1 min-w-0">
+              <DitherAvatar
+                name={entry.modelId}
+                hue={ditherHueForName(entry.modelId)}
+                size={36}
+                animate={false}
+                className="relative z-10 shrink-0 rounded-md"
+              />
+              <div className="relative z-10 flex-1 min-w-0">
                 <div className="font-medium truncate">{entry.modelName}</div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                   <span>{entry.totalTests} tests</span>
@@ -276,17 +310,80 @@ function Leaderboard({ analytics }: { analytics: AnalyticsData }) {
                   )}
                 </div>
               </div>
-              <div className="text-right">
+              <div className="relative z-10 text-right">
                 <div className="text-xl font-bold text-emerald-600">
                   {(entry.avgScore * 100).toFixed(1)}%
                 </div>
-                <Progress
-                  value={entry.avgScore * 100}
-                  className="w-24 h-1.5 mt-1"
-                />
+                {selectedCategory === 'overall' && (modelTrends.get(entry.modelId)?.length || 0) > 1 && (
+                  <Sparkline
+                    data={modelTrends.get(entry.modelId) || []}
+                    color={entry.rank === 1 ? 'green' : entry.rank === 2 ? 'blue' : 'purple'}
+                    variant="gradient"
+                    className="mt-1 h-7 w-24"
+                  />
+                )}
               </div>
             </div>
           ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function CoverageDonut({ analytics }: { analytics: AnalyticsData }) {
+  const totals = useMemo(() => {
+    const stats = Array.from(analytics.modelStats.values())
+    const scored = stats.reduce((sum, stat) => sum + stat.scores.length, 0)
+    const expected = stats.reduce((sum, stat) => sum + stat.totalTests, 0)
+    return { scored, expected, unscored: Math.max(expected - scored, 0) }
+  }, [analytics.modelStats])
+
+  if (totals.expected === 0) return null
+
+  const coverage = totals.scored / totals.expected
+  const data = [
+    { name: 'scored', value: totals.scored },
+    { name: 'unscored', value: totals.unscored },
+  ]
+  const config = {
+    scored: { label: 'Scored', color: 'green' as const },
+    unscored: { label: 'Unscored', color: 'purple' as const },
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Target className="h-5 w-5 text-primary" />
+          Score Coverage
+        </CardTitle>
+        <CardDescription>Completed evaluation cells across all benchmark runs</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="relative mx-auto h-56 max-w-sm">
+          <PieChart
+            data={data}
+            config={config}
+            dataKey="value"
+            nameKey="name"
+            innerRadius={0.62}
+            animate={false}
+            bloom="low"
+            margins={{ top: 8, right: 8, bottom: 8, left: 8 }}
+          >
+            <Pie variant="gradient" />
+          </PieChart>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-3xl font-bold">{(coverage * 100).toFixed(1)}%</span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+              {totals.scored} / {totals.expected} scored
+            </span>
+          </div>
+        </div>
+        <div className="mt-2 flex items-center justify-center gap-5 font-mono text-xs text-muted-foreground">
+          <span>{totals.scored} scored</span>
+          <span>{totals.unscored} unscored</span>
         </div>
       </CardContent>
     </Card>
@@ -382,7 +479,16 @@ function ModelPerformanceDetails({ analytics }: { analytics: AnalyticsData }) {
               {displayedModels.map((stat) => (
                 <tr key={stat.modelId} className="border-b last:border-0 hover:bg-muted/50">
                   <td className="py-2 px-2">
-                    <span className="font-medium">{stat.modelName}</span>
+                    <span className="flex items-center gap-2 font-medium">
+                      <DitherAvatar
+                        name={stat.modelId}
+                        hue={ditherHueForName(stat.modelId)}
+                        size={24}
+                        animate={false}
+                        className="shrink-0 rounded-sm"
+                      />
+                      {stat.modelName}
+                    </span>
                   </td>
                   <td className="text-right py-2 px-2">
                     <span className="text-emerald-600 font-medium">
@@ -443,9 +549,9 @@ function ModelPerformanceDetails({ analytics }: { analytics: AnalyticsData }) {
 function TimelineChart({ analytics }: { analytics: AnalyticsData }) {
   if (analytics.timeSeriesData.length < 2) return null
 
-  const maxScore = Math.max(...analytics.timeSeriesData.map(d => d.avgScore))
-  const minScore = Math.min(...analytics.timeSeriesData.map(d => d.avgScore))
-  const range = maxScore - minScore || 0.1
+  const config = {
+    avgScore: { label: 'Average score', color: 'blue' as const },
+  }
 
   return (
     <Card>
@@ -459,33 +565,22 @@ function TimelineChart({ analytics }: { analytics: AnalyticsData }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-32 flex items-end gap-1">
-          {analytics.timeSeriesData.map((point, index) => {
-            const height = ((point.avgScore - minScore) / range) * 100
-            return (
-              <div
-                key={index}
-                className="flex-1 min-w-2 max-w-10 group relative"
-              >
-                <div
-                  className="bg-primary/60 hover:bg-primary rounded-t transition-colors"
-                  style={{ height: `${Math.max(height, 5)}%` }}
-                />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                  <div className="bg-popover text-popover-foreground text-xs p-2 rounded shadow-lg whitespace-nowrap">
-                    <div className="font-medium">{point.date}</div>
-                    <div className="text-muted-foreground">
-                      Avg: {(point.avgScore * 100).toFixed(1)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-        <div className="flex justify-between text-xs text-muted-foreground mt-2">
-          <span>{analytics.timeSeriesData[0]?.date}</span>
-          <span>{analytics.timeSeriesData[analytics.timeSeriesData.length - 1]?.date}</span>
+        <div className="h-56">
+          <AreaChart
+            data={analytics.timeSeriesData}
+            config={config}
+            bloom="low"
+            margins={{ top: 10, right: 12, bottom: 30, left: 38 }}
+          >
+            <Grid />
+            <XAxis dataKey="date" maxTicks={6} />
+            <YAxis tickFormatter={(value) => `${Math.round(value * 100)}%`} />
+            <Tooltip
+              labelKey="date"
+              valueFormatter={(value) => `${(value * 100).toFixed(1)}%`}
+            />
+            <Area dataKey="avgScore" variant="gradient" />
+          </AreaChart>
         </div>
       </CardContent>
     </Card>
@@ -550,8 +645,10 @@ export function Analytics() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Leaderboard analytics={analytics} />
-        <TimelineChart analytics={analytics} />
+        <CoverageDonut analytics={analytics} />
       </div>
+
+      <TimelineChart analytics={analytics} />
 
       <DifficultyBreakdown analytics={analytics} />
 

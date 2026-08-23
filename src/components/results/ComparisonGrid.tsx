@@ -2,6 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
+import { DitherAvatar } from '@/components/dither-kit/avatar'
+import { ditherHueForName } from '@/lib/dither'
 import { useTestSuiteStore } from '@/stores/testSuiteStore'
 import { ResponseCell } from './ResponseCell'
 import type { RunResult } from '@/types'
@@ -203,8 +205,15 @@ export function ComparisonGrid({ run }: ComparisonGridProps) {
                   className="relative shrink-0 p-2 sm:p-3 font-medium border-r border-border/70 text-center text-sm sm:text-base"
                   style={{ width: getColumnWidth(idx + 1) }}
                 >
-                  <span className="truncate block">
-                    {modelId.split('/').pop()}
+                  <span className="flex min-w-0 items-center justify-center gap-2">
+                    <DitherAvatar
+                      name={modelId}
+                      hue={ditherHueForName(modelId)}
+                      size={24}
+                      animate={false}
+                      className="shrink-0 rounded-sm"
+                    />
+                    <span className="truncate">{modelId.split('/').pop()}</span>
                   </span>
                   <ColumnResizeHandle columnIndex={idx + 1} />
                 </div>

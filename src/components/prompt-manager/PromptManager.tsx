@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { Plus, FolderOpen, Wand2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DitherButton } from '@/components/dither-kit/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -122,9 +123,9 @@ export function PromptManager() {
                       <Button variant="ghost" onClick={() => setDialogOpen(false)}>
                         Cancel
                       </Button>
-                      <Button onClick={handleCreateSuite} disabled={!newSuiteName.trim()}>
+                      <DitherButton color="green" onClick={handleCreateSuite} disabled={!newSuiteName.trim()}>
                         Create Suite
-                      </Button>
+                      </DitherButton>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -155,10 +156,10 @@ export function PromptManager() {
           <BenchmarkGeneratorDialog />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2 bg-background/50">
+              <DitherButton color="green" className="inline-flex h-8 items-center gap-2 bg-background/50 px-3 py-1">
                 <Plus className="h-4 w-4" />
                 New Suite
-              </Button>
+              </DitherButton>
             </DialogTrigger>
             <DialogContent className="rounded-xl border-border/40 bg-background/95 backdrop-blur-xl">
               <DialogHeader>
@@ -191,9 +192,9 @@ export function PromptManager() {
                 <Button variant="ghost" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateSuite} disabled={!newSuiteName.trim()}>
+                <DitherButton color="green" onClick={handleCreateSuite} disabled={!newSuiteName.trim()}>
                   Create
-                </Button>
+                </DitherButton>
               </DialogFooter>
             </DialogContent>
           </Dialog>

@@ -3,6 +3,12 @@ import { BarChart3, TrendingUp, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Bar } from '@/components/dither-kit/bar'
+import { BarChart } from '@/components/dither-kit/bar-chart'
+import { Grid } from '@/components/dither-kit/grid'
+import { Tooltip } from '@/components/dither-kit/tooltip'
+import { XAxis } from '@/components/dither-kit/x-axis'
+import { YAxis } from '@/components/dither-kit/y-axis'
 import {
   Collapsible,
   CollapsibleContent,
@@ -40,54 +46,34 @@ function MultiRunIntervalChart({
 
   if (rows.length < 2) return null
 
+  const data = rows.map(({ modelId, stats: modelStats }) => ({
+    modelId,
+    displayName: modelId.split('/').pop() || modelId,
+    mean: modelStats.mean,
+  }))
+  const config = {
+    mean: { label: 'Mean score', color: 'purple' as const },
+  }
+
   return (
     <div className="rounded-lg border bg-muted/20 p-3">
       <div className="flex items-center justify-between gap-3 mb-3">
-        <h4 className="text-xs font-medium">Mean score with 95% CI</h4>
+        <h4 className="text-xs font-medium">Mean score by model</h4>
         <span className="text-[10px] text-muted-foreground">0-100%</span>
       </div>
-      <div className="space-y-3">
-        {rows.map(({ modelId, stats: modelStats }, index) => {
-          const low = Math.max(0, Math.min(1, modelStats.confidence95[0]))
-          const high = Math.max(0, Math.min(1, modelStats.confidence95[1]))
-          const mean = Math.max(0, Math.min(1, modelStats.mean))
-
-          return (
-            <div
-              key={modelId}
-              className="grid grid-cols-[minmax(110px,1fr)_minmax(160px,2fr)_64px] items-center gap-3 text-xs"
-              aria-label={`${modelId} mean ${formatScore(mean)} 95 percent confidence interval ${formatCI(modelStats.confidence95)}`}
-            >
-              <div className="truncate font-mono" title={modelId}>
-                {index === 0 && <TrendingUp className="h-3 w-3 inline mr-1 text-emerald-600" />}
-                {modelId.split('/').pop()}
-              </div>
-              <div className="relative h-6">
-                <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-border" />
-                <div
-                  className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary/30"
-                  style={{
-                    left: `${low * 100}%`,
-                    width: `${Math.max(1, (high - low) * 100)}%`,
-                  }}
-                />
-                <div
-                  className={index === 0
-                    ? 'absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-2 ring-background'
-                    : 'absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/70 ring-2 ring-background'}
-                  style={{ left: `${mean * 100}%` }}
-                />
-              </div>
-              <div className="text-right font-mono font-semibold">
-                {formatScore(mean)}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-      <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
-        <span>Lower score</span>
-        <span>Higher score</span>
+      <div className="h-64">
+        <BarChart
+          data={data}
+          config={config}
+          bloom="aura"
+          margins={{ top: 10, right: 12, bottom: 30, left: 42 }}
+        >
+          <Grid />
+          <XAxis dataKey="displayName" maxTicks={6} />
+          <YAxis tickFormatter={(value) => formatScore(value)} />
+          <Tooltip labelKey="displayName" valueFormatter={(value) => formatScore(value)} />
+          <Bar dataKey="mean" variant="hatched" />
+        </BarChart>
       </div>
     </div>
   )

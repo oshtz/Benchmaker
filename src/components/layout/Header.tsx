@@ -4,6 +4,7 @@ import { BenchmarkProgress } from '@/components/layout/BenchmarkProgress'
 import { Badge } from '@/components/ui/badge'
 import { useTestSuiteStore } from '@/stores/testSuiteStore'
 import { UpdateStatus } from '@/components/layout/UpdateStatus'
+import { DitherGradient } from '@/components/dither-kit/gradient'
 
 const pageLabels: Record<string, string> = {
   prompts: 'Prompt Library',
@@ -20,6 +21,14 @@ export function Header({ activeTab }: { activeTab: string }) {
 
   return (
     <header className="relative z-50 isolate shrink-0 overflow-hidden border-b border-border/40 bg-background/60 backdrop-blur-2xl">
+      <DitherGradient
+        from="blue"
+        to="purple"
+        direction="right"
+        cell={3}
+        opacity={0.1}
+        className="z-0"
+      />
       <div className="absolute inset-x-0 top-0 z-20 h-[2px] bg-brand-gradient" />
       <div className="relative z-10 flex h-14 min-w-0 items-center gap-3 px-3 sm:h-16 sm:px-5">
         <div className="flex min-w-0 flex-1 items-center gap-3">

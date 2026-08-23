@@ -1,5 +1,6 @@
 import { Play, Square, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DitherButton } from '@/components/dither-kit/button'
 import { useCodeArenaStore } from '@/stores/codeArenaStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useModelStore } from '@/stores/modelStore'
@@ -130,16 +131,16 @@ export function CodeArenaExecutionControls() {
           Stop
         </Button>
       ) : (
-        <Button
-          variant="default"
-          size="sm"
+        <DitherButton
+          color="green"
+          bloom="low"
           onClick={handleRun}
           disabled={!canRun}
-          className="gap-2"
+          className="inline-flex h-9 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white shadow-lg shadow-primary/25"
         >
           <Play className="h-4 w-4" />
           Run
-        </Button>
+        </DitherButton>
       )}
 
       <Button
