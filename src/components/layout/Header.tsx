@@ -1,9 +1,6 @@
-import { ApiKeyManager } from '@/components/settings/ApiKeyManager'
-import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { BenchmarkProgress } from '@/components/layout/BenchmarkProgress'
 import { Badge } from '@/components/ui/badge'
 import { useTestSuiteStore } from '@/stores/testSuiteStore'
-import { UpdateStatus } from '@/components/layout/UpdateStatus'
 import { DitherGradient } from '@/components/dither-kit/gradient'
 
 const pageLabels: Record<string, string> = {
@@ -13,6 +10,7 @@ const pageLabels: Record<string, string> = {
   results: 'Results',
   analytics: 'Analytics',
   data: 'Local Data',
+  settings: 'Settings',
 }
 
 export function Header({ activeTab }: { activeTab: string }) {
@@ -25,11 +23,12 @@ export function Header({ activeTab }: { activeTab: string }) {
         from="blue"
         to="purple"
         direction="right"
-        cell={3}
         opacity={0.1}
         className="z-0"
       />
-      <div className="absolute inset-x-0 top-0 z-20 h-[2px] bg-brand-gradient" />
+      <div className="absolute inset-x-0 top-0 z-20 h-[2px] overflow-hidden">
+        <DitherGradient from="green" to="purple" direction="right" opacity={1} />
+      </div>
       <div className="relative z-10 flex h-14 min-w-0 items-center gap-3 px-3 sm:h-16 sm:px-5">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="min-w-0">
@@ -45,13 +44,6 @@ export function Header({ activeTab }: { activeTab: string }) {
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 lg:gap-4">
           <div className="hidden md:block">
             <BenchmarkProgress />
-          </div>
-          <UpdateStatus />
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="hidden sm:block">
-              <ThemeToggle />
-            </div>
-            <ApiKeyManager />
           </div>
         </div>
       </div>

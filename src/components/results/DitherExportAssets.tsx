@@ -109,7 +109,7 @@ export function DitherExportAssets({ assetKey, document, onReady }: DitherExport
       className="pointer-events-none fixed left-[-10000px] top-0 z-[-1] overflow-hidden"
     >
       <div ref={gradientRef} className="relative h-[260px] w-[960px] overflow-hidden">
-        <DitherGradient from="green" to="purple" direction="right" cell={4} opacity={0.42} />
+        <DitherGradient from="green" to="purple" direction="right" opacity={0.42} />
       </div>
       <div ref={barsRef} className="h-[400px] w-[720px]">
         <BarChart

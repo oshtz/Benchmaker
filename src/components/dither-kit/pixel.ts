@@ -9,6 +9,9 @@ export const BAYER4 = [
   [15, 7, 13, 5],
 ].map((row) => row.map((v) => (v + 0.5) / 16))
 
+/** Shared visible cell size for ordered Bayer treatments across the app. */
+export const DITHER_CELL = 2
+
 export const clamp01 = (t: number) => (t < 0 ? 0 : t > 1 ? 1 : t)
 
 /** 32-bit FNV-1a hash — turns any string seed into a stable uint32. */

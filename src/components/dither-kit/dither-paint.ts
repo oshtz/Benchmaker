@@ -1,5 +1,6 @@
 import type { AreaVariant } from "./chart-context"
 import { rgb, type Seed } from "./palette"
+import { DITHER_CELL } from "./pixel"
 
 // 4×4 ordered (Bayer) matrix, normalized to 0–1 thresholds — the exact matrix
 // the legacy chart dithers with.
@@ -10,7 +11,6 @@ export const BAYER = [
   [15, 7, 13, 5],
 ].map((row) => row.map((v) => (v + 0.5) / 16))
 
-export const CELL = 2 // css px per dither cell — chunky enough to read pixelated
 export const MAX_COLS = 520
 export const MAX_ROWS = 200
 // Opacity of the top border outline (just under solid, so it reads as a soft
@@ -112,8 +112,8 @@ export function resample(src: number[], cols: number): number[] {
 /** Backing-canvas resolution for a plot rect — low-res, scaled up `pixelated`. */
 export function backingSize(width: number, height: number) {
   return {
-    cols: Math.min(MAX_COLS, Math.max(8, Math.round(width / CELL))),
-    rows: Math.min(MAX_ROWS, Math.max(8, Math.round(height / CELL))),
+    cols: Math.min(MAX_COLS, Math.max(8, Math.round(width / DITHER_CELL))),
+    rows: Math.min(MAX_ROWS, Math.max(8, Math.round(height / DITHER_CELL))),
   }
 }
 

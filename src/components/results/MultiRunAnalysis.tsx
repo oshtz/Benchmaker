@@ -58,8 +58,8 @@ function MultiRunIntervalChart({
   return (
     <div className="rounded-lg border bg-muted/20 p-3">
       <div className="flex items-center justify-between gap-3 mb-3">
-        <h4 className="text-xs font-medium">Mean score by model</h4>
-        <span className="text-[10px] text-muted-foreground">0-100%</span>
+        <h4 className="text-sm font-semibold">Mean score by model</h4>
+        <span className="text-xs text-muted-foreground">0-100%</span>
       </div>
       <div className="h-64">
         <BarChart
@@ -183,7 +183,7 @@ export function MultiRunAnalysis({ currentRun }: MultiRunAnalysisProps) {
               {/* Statistical Comparison */}
               {topComparison && (
                 <div className="rounded-lg border p-3 bg-muted/30">
-                  <h4 className="text-xs font-medium mb-2 flex items-center gap-1">
+                  <h4 className="mb-2 flex items-center gap-1 text-sm font-semibold">
                     <AlertCircle className="h-3 w-3" />
                     Statistical Comparison: Top 2 Models
                   </h4>

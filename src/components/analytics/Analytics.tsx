@@ -209,6 +209,7 @@ function InterestingFacts({ facts }: { facts: InterestingFact[] }) {
 
 function Leaderboard({ analytics }: { analytics: AnalyticsData }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('overall')
+  const [expanded, setExpanded] = useState(false)
   
   const categories = useMemo(() => {
     const cats = ['overall', ...Array.from(analytics.categoryLeaderboards.keys())]
@@ -235,6 +236,8 @@ function Leaderboard({ analytics }: { analytics: AnalyticsData }) {
     return trends
   }, [analytics.overallLeaderboard, analytics.timeSeriesData])
 
+  const displayedLeaderboard = expanded ? leaderboard : leaderboard.slice(0, 5)
+
   if (analytics.overallLeaderboard.length === 0) {
     return null
   }
@@ -253,7 +256,13 @@ function Leaderboard({ analytics }: { analytics: AnalyticsData }) {
             </CardDescription>
           </div>
           {categories.length > 1 && (
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select
+              value={selectedCategory}
+              onValueChange={(category) => {
+                setSelectedCategory(category)
+                setExpanded(false)
+              }}
+            >
               <SelectTrigger className="w-45">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
@@ -269,8 +278,8 @@ function Leaderboard({ analytics }: { analytics: AnalyticsData }) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          {leaderboard.map((entry) => (
+        <div id="model-leaderboard-list" className="space-y-3">
+          {displayedLeaderboard.map((entry) => (
             <div
               key={entry.modelId}
               className={`relative isolate flex items-center gap-4 overflow-hidden rounded-lg p-3 transition-colors ${
@@ -284,7 +293,7 @@ function Leaderboard({ analytics }: { analytics: AnalyticsData }) {
               }`}
             >
               {entry.rank === 1 && (
-                <DitherGradient from="green" to="transparent" direction="right" cell={4} opacity={0.2} />
+                <DitherGradient from="green" to="transparent" direction="right" opacity={0.2} />
               )}
               <div className="relative z-10 w-8 flex justify-center">
                 {getRankBadge(entry.rank)}
@@ -326,6 +335,28 @@ function Leaderboard({ analytics }: { analytics: AnalyticsData }) {
             </div>
           ))}
         </div>
+        {leaderboard.length > 5 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3 w-full"
+            onClick={() => setExpanded((value) => !value)}
+            aria-expanded={expanded}
+            aria-controls="model-leaderboard-list"
+          >
+            {expanded ? (
+              <>
+                <ChevronUp className="mr-1 h-4 w-4" />
+                Show Less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="mr-1 h-4 w-4" />
+                Show {leaderboard.length - 5} More
+              </>
+            )}
+          </Button>
+        )}
       </CardContent>
     </Card>
   )
@@ -376,7 +407,7 @@ function CoverageDonut({ analytics }: { analytics: AnalyticsData }) {
           </PieChart>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-3xl font-bold">{(coverage * 100).toFixed(1)}%</span>
-            <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+            <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
               {totals.scored} / {totals.expected} scored
             </span>
           </div>
@@ -627,7 +658,7 @@ export function Analytics() {
 
   return (
     <div className="h-full min-h-0 flex flex-col gap-6 overflow-auto pb-6">
-      <div className="surface-strong rounded-3xl p-5 shrink-0">
+      <div className="surface shrink-0 p-4 sm:p-5">
         <h2 className="headline">Analytics</h2>
         <p className="text-sm text-muted-foreground">
           Insights and leaderboards from all your benchmark data

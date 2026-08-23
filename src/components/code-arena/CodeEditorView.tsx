@@ -116,7 +116,7 @@ export function CodeEditorView({
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-2 right-2 z-10 h-7 w-7 bg-background/20 hover:bg-background/40 text-white"
+        className="absolute top-2 right-2 z-10 h-8 w-8 bg-background/20 hover:bg-background/40 text-white"
         onClick={handleCopy}
         title="Copy code"
       >

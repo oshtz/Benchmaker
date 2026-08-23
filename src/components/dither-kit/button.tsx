@@ -3,6 +3,7 @@ import { cn } from "./lib"
 import { rgb } from "./palette"
 import {
   BAYER4,
+  DITHER_CELL,
   clamp01,
   fillOf,
   type PixelBloom,
@@ -10,8 +11,6 @@ import {
   pixelBloomStyle,
   pixelPrefersReducedMotion,
 } from "./pixel"
-
-const CELL = 2 // css px per dither cell — same chunk as the charts
 
 export type ButtonVariant = "gradient" | "dotted" | "hatched" | "solid"
 
@@ -139,8 +138,8 @@ export function DitherButton({
 
     const resize = () => {
       const box = button.getBoundingClientRect()
-      cols = Math.max(4, Math.round(box.width / CELL))
-      rows = Math.max(4, Math.round(box.height / CELL))
+      cols = Math.max(4, Math.round(box.width / DITHER_CELL))
+      rows = Math.max(4, Math.round(box.height / DITHER_CELL))
       canvas.width = cols
       canvas.height = rows
       if (bloomCanvas) {
@@ -189,7 +188,7 @@ export function DitherButton({
       ref={buttonRef}
       type="button"
       className={cn(
-        "relative isolate overflow-hidden rounded-md px-4 py-2 font-mono text-xs text-foreground transition-opacity focus-visible:ring-1 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40",
+        "relative isolate inline-flex items-center justify-center overflow-hidden whitespace-nowrap rounded-md px-4 py-2 font-mono text-xs text-foreground transition-opacity focus-visible:ring-1 focus-visible:ring-foreground/40 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40",
         className
       )}
       {...props}
@@ -208,7 +207,9 @@ export function DitherButton({
           style={bloomStyle}
         />
       )}
-      <span className="relative">{children}</span>
+      <span className="relative inline-flex items-center justify-center whitespace-nowrap [gap:inherit] [&>svg]:shrink-0">
+        {children}
+      </span>
     </button>
   )
 }

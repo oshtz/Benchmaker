@@ -286,7 +286,7 @@ export function ComparisonGrid({ run }: ComparisonGridProps) {
                     <div className="bg-muted/20">
                       {/* Prompt */}
                       <div className="p-3 sm:p-4 border-b border-border/60">
-                        <div className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-1">
+                        <div className="mb-1 text-xs font-medium text-muted-foreground">
                           Prompt
                         </div>
                         <div className="text-xs sm:text-sm whitespace-pre-wrap">
@@ -294,7 +294,7 @@ export function ComparisonGrid({ run }: ComparisonGridProps) {
                         </div>
                         {testCase.expectedOutput && (
                           <div className="mt-2">
-                            <div className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-1">
+                            <div className="mb-1 text-xs font-medium text-muted-foreground">
                               Expected Output
                             </div>
                             <div className="text-xs sm:text-sm font-mono bg-background/70 p-2 rounded-lg border border-border/60">

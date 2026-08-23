@@ -198,7 +198,7 @@ export function ExportResultsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
         <DialogHeader className="relative isolate -mx-6 -mt-6 overflow-hidden border-b border-border/50 px-6 pb-4 pt-6">
-          <DitherGradient from="green" to="transparent" direction="right" cell={4} opacity={0.25} />
+          <DitherGradient from="green" to="transparent" direction="right" opacity={0.25} />
           <DialogTitle className="relative z-10">Export Benchmark Results</DialogTitle>
           <DialogDescription className="relative z-10">
             Create a detailed HTML report or a compact share image for this run.

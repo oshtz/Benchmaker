@@ -63,7 +63,7 @@ export function CodePreviewPanel({ code, className = '' }: CodePreviewPanelProps
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-2 right-2 z-10 h-7 w-7 bg-background/80 hover:bg-background"
+        className="absolute top-2 right-2 z-10 h-8 w-8 bg-background/80 hover:bg-background"
         onClick={handleRefresh}
         title="Refresh preview"
       >

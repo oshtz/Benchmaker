@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Search, Loader2, X, SlidersHorizontal, Filter } from 'lucide-react'
+import { useEffect, useState, useMemo } from 'react'
+import { Search, Loader2, X, SlidersHorizontal, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +13,8 @@ import { useCodeArenaStore } from '@/stores/codeArenaStore'
 
 type PriceRange = 'all' | 'free' | 'cheap' | 'medium' | 'expensive'
 type ContextRange = 'all' | '8k+' | '32k+' | '128k+' | '200k+'
+
+const MODELS_PER_PAGE = 12
 
 const PRICE_RANGES: { value: PriceRange; label: string; max?: number; min?: number }[] = [
   { value: 'all', label: 'All Prices' },
@@ -62,6 +64,7 @@ export function ModelSelector({ useCodeArenaStore: useCodeArena = false }: Model
   const [priceFilter, setPriceFilter] = useState<PriceRange>('all')
   const [contextFilter, setContextFilter] = useState<ContextRange>('all')
   const [showFilters, setShowFilters] = useState(false)
+  const [page, setPage] = useState(0)
   const searchTerm = searchQuery.trim().toLowerCase()
 
   // Extract unique providers
@@ -119,6 +122,19 @@ export function ModelSelector({ useCodeArenaStore: useCodeArena = false }: Model
     contextFilter !== 'all',
     providerFilter !== null,
   ].filter(Boolean).length
+
+  const pageCount = Math.max(1, Math.ceil(filteredModels.length / MODELS_PER_PAGE))
+  const safePage = Math.min(page, pageCount - 1)
+  const pageStart = safePage * MODELS_PER_PAGE
+  const paginatedModels = filteredModels.slice(pageStart, pageStart + MODELS_PER_PAGE)
+
+  useEffect(() => {
+    setPage(0)
+  }, [searchTerm, providerFilter, priceFilter, contextFilter])
+
+  useEffect(() => {
+    if (page >= pageCount) setPage(pageCount - 1)
+  }, [page, pageCount])
 
   const providersForTags = useMemo(() => {
     if (providerFilter && !providers.includes(providerFilter)) {
@@ -227,7 +243,7 @@ export function ModelSelector({ useCodeArenaStore: useCodeArena = false }: Model
                 Filters
               </span>
               {activeFilterCount > 0 && (
-                <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={clearAllFilters}>
+                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={clearAllFilters}>
                   Clear all
                 </Button>
               )}
@@ -292,17 +308,17 @@ export function ModelSelector({ useCodeArenaStore: useCodeArena = false }: Model
           ))}
         </div>
 
-        <ScrollArea className="flex-1">
+        <ScrollArea key={safePage} className="flex-1">
           <div className="space-y-2 pb-4">
-            {filteredModels.map((model) => {
+            {paginatedModels.map((model) => {
               const isSelected = selectedModelIds.includes(model.id)
               return (
                 <div
                   key={model.id}
-                  className={`flex items-center gap-3 rounded-lg border border-border bg-background p-3 cursor-pointer transition-all ${
+                  className={`flex items-center gap-3 rounded-lg border border-border bg-background p-3 cursor-pointer transition-colors ${
                     isSelected
-                      ? 'bg-primary/10 border-l-2 border-l-primary shadow-none'
-                      : 'hover:bg-muted/50 hover:border-l-2 hover:border-l-primary'
+                      ? 'bg-primary/10 shadow-none'
+                      : 'hover:bg-muted/50'
                   }`}
                   onClick={() => toggleModelSelection(model.id)}
                 >
@@ -340,6 +356,41 @@ export function ModelSelector({ useCodeArenaStore: useCodeArena = false }: Model
             })}
           </div>
         </ScrollArea>
+
+        {pageCount > 1 && (
+          <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/50 pt-3">
+            <span className="text-xs text-muted-foreground">
+              {pageStart + 1}–{Math.min(pageStart + MODELS_PER_PAGE, filteredModels.length)} of {filteredModels.length}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage((current) => Math.max(0, current - 1))}
+                disabled={safePage === 0}
+                aria-label="Previous model page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="min-w-12 text-center font-mono text-xs text-muted-foreground">
+                {safePage + 1}/{pageCount}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+                disabled={safePage === pageCount - 1}
+                aria-label="Next model page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

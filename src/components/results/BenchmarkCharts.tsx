@@ -245,7 +245,7 @@ function TradeoffChart({ rows }: { rows: ModelChartRow[] }) {
           </RadarChart>
         </div>
         <div className="divide-y rounded-lg border bg-muted/20 px-3">
-          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 py-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-3 py-2 text-xs uppercase tracking-wide text-muted-foreground">
             <span>Model</span>
             <span>Score</span>
             <span>Cost</span>

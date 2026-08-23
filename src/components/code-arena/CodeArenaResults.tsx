@@ -123,7 +123,7 @@ export function CodeArenaResults() {
                     <Button
                       variant={viewMode === 'preview' ? 'default' : 'outline'}
                       size="sm"
-                      className="h-7"
+                      className="h-8"
                       onClick={() => setViewMode('preview')}
                     >
                       <Eye className="h-3.5 w-3.5 mr-1" />
@@ -132,7 +132,7 @@ export function CodeArenaResults() {
                     <Button
                       variant={viewMode === 'code' ? 'default' : 'outline'}
                       size="sm"
-                      className="h-7"
+                      className="h-8"
                       onClick={() => setViewMode('code')}
                     >
                       <Code className="h-3.5 w-3.5 mr-1" />

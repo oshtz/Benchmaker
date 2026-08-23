@@ -37,7 +37,7 @@ export function EmptyState({
 
   return (
     <Card className={cn('max-w-2xl mx-auto relative overflow-hidden', className)}>
-      <DitherGradient from="green" to="transparent" direction="down" cell={4} opacity={0.28} />
+      <DitherGradient from="green" to="transparent" direction="down" opacity={0.28} />
       <CardHeader className="relative z-10 text-center pb-2 space-y-3">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10 shadow-sm">
           <Icon className={cn('h-8 w-8', iconColors[variant])} />

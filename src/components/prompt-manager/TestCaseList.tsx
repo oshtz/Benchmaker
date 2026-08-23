@@ -344,7 +344,7 @@ export function TestCaseList({ testSuite }: TestCaseListProps) {
                     className="border border-border/40 rounded-xl overflow-hidden bg-card shadow-sm min-w-0"
                   >
                     <div
-                      className="group flex items-center gap-2 p-3 bg-muted/20 cursor-pointer hover:bg-muted/50 hover:border-l-2 hover:border-l-primary transition-colors min-w-0"
+                      className="group flex items-center gap-2 p-3 bg-muted/20 cursor-pointer hover:bg-muted/50 transition-colors min-w-0"
                       onClick={() => toggleExpanded(testCase.id)}
                     >
                       {expandedIds.has(testCase.id) ? (
@@ -364,7 +364,7 @@ export function TestCaseList({ testSuite }: TestCaseListProps) {
                       </Badge>
                       <div className="flex items-center shrink-0 gap-0.5">
                         <button
-                          className="h-7 w-7 rounded-full inline-flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground hover:bg-accent/60 transition-all"
+                          className="h-8 w-8 rounded-full inline-flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground hover:bg-accent/60 transition-all"
                           onClick={(e) => {
                             e.stopPropagation()
                             setEditingTestCase(testCase)
@@ -373,7 +373,7 @@ export function TestCaseList({ testSuite }: TestCaseListProps) {
                           <Edit className="h-3.5 w-3.5" />
                         </button>
                         <button
-                          className="h-7 w-7 rounded-full inline-flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive hover:bg-destructive/10 transition-all"
+                          className="h-8 w-8 rounded-full inline-flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive hover:bg-destructive/10 transition-all"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleDelete(testCase.id)

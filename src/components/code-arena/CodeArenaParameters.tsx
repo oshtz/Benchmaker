@@ -31,5 +31,5 @@ export function CodeArenaParameters() {
 }
 
 function Field({ id, label, value, disabled, onChange }: { id: string; label: string; value: number; disabled?: boolean; onChange: (value: string) => void }) {
-  return <div className="space-y-1.5"><Label htmlFor={id} className="text-xs">{label}</Label><Input id={id} type="number" value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)} className="h-8" /></div>
+  return <div className="space-y-1.5"><Label htmlFor={id}>{label}</Label><Input id={id} type="number" value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)} className="h-8" /></div>
 }

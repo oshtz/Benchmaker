@@ -88,14 +88,9 @@ The updater checks the latest GitHub release for platform-specific assets:
 
 Each update asset must have a matching `.sha256` sidecar, or be covered by `checksums.txt`. The app verifies SHA-256 before writing or applying the update.
 
-The GitHub Actions release workflow also supports optional Windows code signing through:
+Windows releases intentionally ship as an unsigned single-file portable executable; MSI, NSIS, and Authenticode-signed Windows artifacts are not part of the release contract. Portable packaging requires the repository variable `EVB_INSTALLER_SHA256` with the expected SHA-256 of the Enigma Virtual Box installer. Expect the normal SmartScreen and antivirus reputation warnings associated with unsigned packed executables.
 
-- `WINDOWS_CERTIFICATE`
-- `WINDOWS_CERTIFICATE_PASSWORD`
-
-Windows portable packaging also requires the repository variable `EVB_INSTALLER_SHA256` with the expected SHA-256 of the Enigma Virtual Box installer.
-
-macOS release builds require the Apple signing and notarization secrets already referenced in `.github/workflows/build.yml`.
+macOS releases are universal (`arm64` and `x86_64`) signed and notarized DMGs. The app, bundled FFmpeg sidecar, and DMG are architecture/signature checked; the app and DMG are notarized, stapled, and Gatekeeper-assessed before publication. Builds require the Apple signing and notarization secrets referenced in `.github/workflows/build.yml`.
 
 ## Project Layout
 

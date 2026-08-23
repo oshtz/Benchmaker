@@ -5,6 +5,7 @@ import { cn } from "./lib"
 import { rgb } from "./palette"
 import {
   BAYER4,
+  DITHER_CELL,
   fillOf,
   type PixelBloom,
   type PixelColor,
@@ -25,8 +26,6 @@ export type DitherGradientProps = {
   to?: PixelColor | "transparent"
   /** Where `to` ends up — "up" reads as a glow rising from the bottom edge. */
   direction?: GradientDirection
-  /** CSS px per dither cell — bigger is chunkier. */
-  cell?: number
   /** Overall opacity multiplier. */
   opacity?: number
   /** Glow on the dither fill. */
@@ -38,7 +37,6 @@ type PaintSpec = {
   from: PixelColor
   to: PixelColor | "transparent"
   direction: GradientDirection
-  cell: number
   opacity: number
 }
 
@@ -56,8 +54,8 @@ function paintGradient(
 ): void {
   const ctx = canvas.getContext("2d")
   if (!ctx || width <= 0 || height <= 0) return
-  const cols = Math.min(MAX_COLS, Math.max(4, Math.round(width / spec.cell)))
-  const rows = Math.min(MAX_ROWS, Math.max(4, Math.round(height / spec.cell)))
+  const cols = Math.min(MAX_COLS, Math.max(4, Math.round(width / DITHER_CELL)))
+  const rows = Math.min(MAX_ROWS, Math.max(4, Math.round(height / DITHER_CELL)))
   canvas.width = cols
   canvas.height = rows
 
@@ -111,7 +109,6 @@ export function DitherGradient({
   from,
   to = "transparent",
   direction = "up",
-  cell = 3,
   opacity = 1,
   bloom = "off",
   className,
@@ -130,7 +127,6 @@ export function DitherGradient({
         from,
         to,
         direction,
-        cell,
         opacity,
       })
     }
@@ -139,7 +135,7 @@ export function DitherGradient({
     const ro = new ResizeObserver(paint)
     ro.observe(wrap)
     return () => ro.disconnect()
-  }, [from, to, direction, cell, opacity, bloom])
+  }, [from, to, direction, opacity, bloom])
 
   const bloomStyle = pixelBloomStyle(bloom)
 
