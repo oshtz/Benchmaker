@@ -156,6 +156,7 @@ function checkWorkflowContract() {
     'npm run lint',
     'npm run typecheck',
     'npm test',
+    'npm run prepare:ffmpeg',
     'cargo test --manifest-path src-tauri/Cargo.toml',
     'npm run build',
     'npm run test:e2e',
